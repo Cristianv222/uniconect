@@ -202,7 +202,7 @@
             </button>
 
             <!-- Brand -->
-            <a class="navbar-brand" href="{% url 'feed:index' %}">
+            <a class="navbar-brand" href="{% url 'feed:home' %}">
                 <i class="bi bi-mortarboard"></i> UnicoNet
             </a>
 
@@ -281,7 +281,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <nav class="nav flex-column">
-            <a href="{% url 'feed:index' %}" class="sidebar-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+            <a href="{% url 'feed:home' %}" class="sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                 <i class="bi bi-house-door"></i>
                 <span>Inicio</span>
             </a>

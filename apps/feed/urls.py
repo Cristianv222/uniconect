@@ -9,5 +9,5 @@ def index_view(request):
     return render(request, 'feed/index.html', {'user': request.user})
 
 urlpatterns = [
-    path('', index_view, name='index'),
+    path('', index_view, name='home'),  
 ]

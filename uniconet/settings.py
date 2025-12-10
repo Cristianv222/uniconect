@@ -195,7 +195,7 @@ AUTH_USER_MODEL = 'authentication.User'
 
 # Login/Logout URLs
 LOGIN_URL = '/auth/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/feed/'
 LOGOUT_REDIRECT_URL = '/'
 
 
@@ -242,6 +242,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'http://0.0.0.0:8000',
 ]
 
 CORS_ALLOW_CREDENTIALS = True

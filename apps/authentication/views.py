@@ -13,6 +13,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from datetime import timedelta
+from django.views.decorators.csrf import ensure_csrf_cookie
 import secrets
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -166,8 +167,8 @@ def login_view(request):
         'title': 'Iniciar Sesión - UnicoNet'
     })
 
-
 @require_http_methods(["POST", "GET"])
+@ensure_csrf_cookie
 def logout_view(request):
     """
     Vista para cerrar sesión
