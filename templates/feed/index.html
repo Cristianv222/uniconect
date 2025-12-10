@@ -1,0 +1,42 @@
+{% extends 'components/base_authenticated.html' %}
+
+{% block title %}Inicio - Feed{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                    <h2 class="mt-3">¡Bienvenido a UnicoNet!</h2>
+                    <p class="lead">Hola <strong>{{ user.get_full_name }}</strong>, has iniciado sesión exitosamente.</p>
+                    <p class="text-muted">El feed principal está en desarrollo. Por ahora puedes explorar tu perfil.</p>
+                    <div class="mt-4">
+                        <a href="{% url 'profiles:detail' user.username %}" class="btn btn-primary">
+                            <i class="bi bi-person me-2"></i>Ver mi perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Tu información</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>Tipo de usuario:</strong> {{ user.get_user_type_display }}</p>
+                    {% if user.career %}
+                    <p><strong>Carrera:</strong> {{ user.get_career_display }}</p>
+                    {% endif %}
+                    {% if user.semester %}
+                    <p><strong>Semestre:</strong> {{ user.semester }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UnicoNet - Red Social Universitaria | UPEC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0d47a1;
+            --primary-dark: #002171;
+            --secondary: #00695c;
+            --accent: #d32f2f;
+            --dark: #263238;
+            --light: #eceff1;
+            --gray: #546e7a;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: var(--white);
+            padding: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .navbar-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-login {
+            padding: 10px 25px;
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-login:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-register {
+            padding: 10px 25px;
+            background: var(--primary);
+            color: var(--white);
+            border: 2px solid var(--primary);
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-register:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--primary);
+            color: white;
+            padding: 150px 20px 100px;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .hero .subtitle {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            font-weight: 300;
+        }
+
+        .hero .university {
+            font-size: 1.1em;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: var(--white);
+            color: var(--primary);
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            border: 2px solid var(--white);
+        }
+
+        .cta-button:hover {
+            background: transparent;
+            color: var(--white);
+        }
+
+        .cta-button-secondary {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+
+        .cta-button-secondary:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Section */
+        .section {
+            padding: 80px 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            margin: 20px auto 0;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            color: var(--gray);
+            margin-bottom: 60px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ISO Standards Section */
+        .iso-section {
+            background: var(--light);
+        }
+
+        .iso-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .iso-card {
+            background: var(--white);
+            padding: 35px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border-left: 4px solid var(--primary);
+        }
+
+        .iso-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .iso-card h3 {
+            color: var(--primary);
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .iso-badge {
+            background: var(--primary);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 0.65em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .iso-card p {
+            color: var(--gray);
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .iso-card ul {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .iso-card ul li {
+            padding: 8px 0;
+            color: var(--gray);
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .iso-card ul li::before {
+            content: '\F26A';
+            font-family: 'bootstrap-icons';
+            position: absolute;
+            left: 0;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        /* Features Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 40px 25px;
+            background: var(--white);
+            border-radius: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: var(--gray);
+            line-height: 1.7;
+        }
+
+        /* Tech Stack Section */
+        .tech-section {
+            background: var(--dark);
+            color: white;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .tech-item {
+            text-align: center;
+            padding: 30px 25px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+
+        .tech-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .tech-item .tech-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: var(--white);
+        }
+
+        .tech-item h4 {
+            font-size: 1.2em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .tech-item p {
+            opacity: 0.85;
+            font-size: 0.95em;
+        }
+
+        /* Quality Section */
+        .quality-section {
+            background: var(--light);
+        }
+
+        .quality-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+            margin-top: 40px;
+        }
+
+        .quality-text h3 {
+            color: var(--primary);
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .quality-text p {
+            color: var(--gray);
+            line-height: 1.8;
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        .quality-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: var(--white);
+            padding: 30px 25px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+
+        .stat-number {
+            font-size: 2.8em;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .footer p {
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .footer a {
+            color: var(--white);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            transition: border-color 0.3s;
+        }
+
+        .footer a:hover {
+            border-color: var(--white);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5em;
+            }
+
+            .hero .subtitle {
+                font-size: 1.2em;
+            }
+
+            .section-title {
+                font-size: 2em;
+            }
+
+            .quality-content {
+                grid-template-columns: 1fr;
+            }
+
+            .quality-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .iso-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar-brand {
+                font-size: 1.2em;
+            }
+
+            .btn-login, .btn-register {
+                padding: 8px 18px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'home' %}" class="navbar-brand">
+                <i class="bi bi-mortarboard"></i> UnicoNet
+            </a>
+            <div class="navbar-buttons">
+                <a href="{% url 'authentication:login' %}" class="btn-login">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Iniciar Sesión
+                </a>
+                <a href="{% url 'authentication:register' %}" class="btn-register">
+                    <i class="bi bi-person-plus"></i>
+                    Registrarse
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>UnicoNet</h1>
+            <p class="subtitle">Red Social Universitaria de Nueva Generación</p>
+            <p class="university">Universidad Politécnica Estatal del Carchi - UPEC</p>
+            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                <a href="#features" class="cta-button">Descubre Más</a>
+                <a href="{% url 'authentication:register' %}" class="cta-button" style="background: transparent; border: 2px solid white; color: white;">
+                    <i class="bi bi-person-plus"></i> Únete Ahora
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ISO Standards Section -->
+    <section class="section iso-section">
+        <div class="container">
+            <h2 class="section-title">Desarrollo Basado en Estándares ISO</h2>
+            <p class="section-subtitle">
+                UnicoNet ha sido desarrollado siguiendo rigurosos estándares internacionales de calidad,
+                garantizando un software robusto, seguro y mantenible.
+            </p>
+            
+            <div class="iso-grid">
+                <div class="iso-card">
+                    <h3>
+                        <span class="iso-badge">ISO/IEC 25010</span>
+                        Calidad del Software
+                    </h3>
+                    <p>
+                        Modelo de calidad que define características esenciales para evaluar 
+                        la calidad del producto software.
+                    </p>
+                    <ul>
+                        <li>Funcionalidad completa y adecuada</li>
+                        <li>Rendimiento optimizado</li>
+                        <li>Compatibilidad multiplataforma</li>
+                        <li>Usabilidad intuitiva</li>
+                        <li>Fiabilidad y disponibilidad</li>
+                        <li>Seguridad robusta</li>
+                        <li>Mantenibilidad y escalabilidad</li>
+                    </ul>
+                </div>
+
+                <div class="iso-card">
+                    <h3>
+                        <span class="iso-badge">ISO/IEC 12207</span>
+                        Ciclo de Vida del Software
+                    </h3>
+                    <p>
+                        Procesos, actividades y tareas estructuradas para el desarrollo 
+                        y mantenimiento del software.
+                    </p>
+                    <ul>
+                        <li>Análisis de requisitos detallado</li>
+                        <li>Diseño arquitectónico modular</li>
+                        <li>Implementación con mejores prácticas</li>
+                        <li>Pruebas exhaustivas (unitarias, integración)</li>
+                        <li>Despliegue automatizado</li>
+                        <li>Mantenimiento continuo</li>
+                    </ul>
+                </div>
+
+                <div class="iso-card">
+                    <h3>
+                        <span class="iso-badge">ISO/IEC 27001</span>
+                        Seguridad de la Información
+                    </h3>
+                    <p>
+                        Sistema de gestión de seguridad que protege la confidencialidad, 
+                        integridad y disponibilidad de la información.
+                    </p>
+                    <ul>
+                        <li>Autenticación y autorización robusta</li>
+                        <li>Encriptación de datos sensibles</li>
+                        <li>Control de acceso basado en roles</li>
+                        <li>Auditoría y registro de eventos</li>
+                        <li>Protección contra vulnerabilidades</li>
+                        <li>Backup y recuperación de datos</li>
+                    </ul>
+                </div>
+
+                <div class="iso-card">
+                    <h3>
+                        <span class="iso-badge">ISO 9001</span>
+                        Gestión de Calidad
+                    </h3>
+                    <p>
+                        Sistema de gestión que asegura la calidad en todos los procesos 
+                        de desarrollo y entrega del producto.
+                    </p>
+                    <ul>
+                        <li>Documentación completa del proyecto</li>
+                        <li>Revisiones de código periódicas</li>
+                        <li>Control de versiones (Git)</li>
+                        <li>Integración y entrega continua (CI/CD)</li>
+                        <li>Métricas de calidad del código</li>
+                        <li>Mejora continua del proceso</li>
+                    </ul>
+                </div>
+
+                <div class="iso-card">
+                    <h3>
+                        <span class="iso-badge">ISO/IEC 29119</span>
+                        Testing de Software
+                    </h3>
+                    <p>
+                        Estándares para procesos de prueba que garantizan la detección 
+                        temprana de defectos y la validación funcional.
+                    </p>
+                    <ul>
+                        <li>Pruebas unitarias automatizadas</li>
+                        <li>Pruebas de integración</li>
+                        <li>Pruebas de sistema completo</li>
+                        <li>Pruebas de seguridad</li>
+                        <li>Pruebas de rendimiento</li>
+                        <li>Cobertura de código >80%</li>
+                    </ul>
+                </div>
+
+                <div class="iso-card">
+                    <h3>
+                        <span class="iso-badge">ISO/IEC 25040</span>
+                        Evaluación de Calidad
+                    </h3>
+                    <p>
+                        Proceso de evaluación sistemática que mide y valida la calidad 
+                        del producto software desarrollado.
+                    </p>
+                    <ul>
+                        <li>Métricas de calidad definidas</li>
+                        <li>Evaluación continua del código</li>
+                        <li>Análisis de complejidad ciclomática</li>
+                        <li>Medición de deuda técnica</li>
+                        <li>Revisión de arquitectura</li>
+                        <li>Validación con usuarios finales</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+        <div class="container">
+            <h2 class="section-title">Características Principales</h2>
+            <p class="section-subtitle">
+                Una plataforma completa diseñada específicamente para las necesidades 
+                de la comunidad universitaria
+            </p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-person-circle"></i></div>
+                    <h3>Perfiles Personalizables</h3>
+                    <p>Crea y personaliza tu perfil académico con información sobre tu carrera, intereses y logros universitarios.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-file-earmark-text"></i></div>
+                    <h3>Publicaciones Multimedia</h3>
+                    <p>Comparte contenido académico, proyectos y experiencias con texto, imágenes y videos.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-people"></i></div>
+                    <h3>Grupos Universitarios</h3>
+                    <p>Únete a grupos de estudio, clubes académicos y comunidades de tu carrera para colaborar.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-chat-dots"></i></div>
+                    <h3>Mensajería Privada</h3>
+                    <p>Comunícate directamente con compañeros, profesores y grupos de trabajo de forma segura.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-calendar-event"></i></div>
+                    <h3>Eventos Académicos</h3>
+                    <p>Descubre y organiza eventos, seminarios, conferencias y actividades universitarias.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-bell"></i></div>
+                    <h3>Notificaciones en Tiempo Real</h3>
+                    <p>Mantente informado sobre interacciones, eventos y actualizaciones importantes al instante.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-rss"></i></div>
+                    <h3>Feed Personalizado</h3>
+                    <p>Algoritmo inteligente que muestra contenido relevante según tus intereses académicos.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-share"></i></div>
+                    <h3>Red de Contactos</h3>
+                    <p>Conecta con estudiantes de tu carrera, compañeros de clase y profesionales del área.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-lightbulb"></i></div>
+                    <h3>Colaboración Académica</h3>
+                    <p>Facilita el trabajo en equipo, compartir recursos y resolver dudas entre estudiantes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section class="section tech-section">
+        <div class="container">
+            <h2 class="section-title" style="color: white;">Tecnologías de Vanguardia</h2>
+            <p class="section-subtitle" style="color: rgba(255,255,255,0.8);">
+                Desarrollado con las mejores herramientas y frameworks del mercado
+            </p>
+
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <div class="tech-icon"><i class="bi bi-code-slash"></i></div>
+                    <h4>Python 3.11+</h4>
+                    <p>Lenguaje moderno y potente</p>
+                </div>
+
+                <div class="tech-item">
+                    <div class="tech-icon"><i class="bi bi-hexagon"></i></div>
+                    <h4>Django 5.0+</h4>
+                    <p>Framework web robusto</p>
+                </div>
+
+                <div class="tech-item">
+                    <div class="tech-icon"><i class="bi bi-database"></i></div>
+                    <h4>PostgreSQL 15</h4>
+                    <p>Base de datos relacional</p>
+                </div>
+
+                <div class="tech-item">
+                    <div class="tech-icon"><i class="bi bi-box-seam"></i></div>
+                    <h4>Docker</h4>
+                    <p>Containerización moderna</p>
+                </div>
+
+                <div class="tech-item">
+                    <div class="tech-icon"><i class="bi bi-plugin"></i></div>
+                    <h4>REST Framework</h4>
+                    <p>APIs robustas y escalables</p>
+                </div>
+
+                <div class="tech-item">
+                    <div class="tech-icon"><i class="bi bi-shield-lock"></i></div>
+                    <h4>Seguridad Avanzada</h4>
+                    <p>Encriptación y protección</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quality Section -->
+    <section class="section quality-section">
+        <div class="container">
+            <h2 class="section-title">Compromiso con la Calidad</h2>
+            
+            <div class="quality-content">
+                <div class="quality-text">
+                    <h3>Excelencia en Desarrollo de Software</h3>
+                    <p>
+                        UnicoNet representa el compromiso de la UPEC con la innovación tecnológica 
+                        y la calidad en el desarrollo de software. Cada línea de código ha sido 
+                        cuidadosamente diseñada siguiendo estándares internacionales.
+                    </p>
+                    <p>
+                        Nuestro equipo de desarrollo ha implementado las mejores prácticas de la 
+                        industria, incluyendo arquitectura modular, testing automatizado, integración 
+                        continua y documentación exhaustiva.
+                    </p>
+                    <p>
+                        El resultado es una plataforma escalable, segura y eficiente que satisface 
+                        las necesidades reales de la comunidad universitaria, preparada para crecer 
+                        junto con la institución.
+                    </p>
+                </div>
+
+                <div class="quality-stats">
+                    <div class="stat-box">
+                        <span class="stat-number">11+</span>
+                        <span class="stat-label">Módulos Integrados</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">6</span>
+                        <span class="stat-label">Normas ISO Aplicadas</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Código Documentado</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Disponibilidad</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p><strong>UnicoNet</strong> - Red Social Universitaria</p>
+            <p>Universidad Politécnica Estatal del Carchi (UPEC)</p>
+            <p>Desarrollado con estándares ISO de calidad internacional</p>
+            <p style="margin-top: 20px;">
+                <a href="#">Términos de Uso</a> | 
+                <a href="#">Política de Privacidad</a> | 
+                <a href="#">Contacto</a>
+            </p>
+            <p style="margin-top: 20px; opacity: 0.6; font-size: 0.9em;">
+                © 2024 UPEC. Todos los derechos reservados.
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

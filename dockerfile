@@ -39,5 +39,7 @@ EXPOSE 8000
 # Punto de entrada
 ENTRYPOINT ["/app/entrypoint.sh"]
 
+RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
+
 # Comando por defecto
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

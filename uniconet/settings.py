@@ -21,7 +21,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-key-in-pr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 
 # ==============================================================================
@@ -61,7 +61,7 @@ LOCAL_APPS = [
     'apps.friends',
     'apps.groups',
     'apps.notifications',
-    'apps.messages',
+    'apps.messaging',
     'apps.feed',
     'apps.events',
 ]
@@ -114,7 +114,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
-                'apps.context_processors.site_info',  # Context processor personalizado
             ],
         },
     },
@@ -152,7 +151,6 @@ CACHES = {
         'LOCATION': f"redis://{config('REDIS_HOST', default='localhost')}:{config('REDIS_PORT', default='6379')}/1",
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PARSER_CLASS': 'redis.connection.HiredisParser',
             'CONNECTION_POOL_CLASS_KWARGS': {
                 'max_connections': 50,
                 'retry_on_timeout': True,
@@ -192,12 +190,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Modelo de usuario personalizado (si lo vas a usar)
-# AUTH_USER_MODEL = 'authentication.CustomUser'
+# Modelo de usuario personalizado
+AUTH_USER_MODEL = 'authentication.User'
 
 # Login/Logout URLs
 LOGIN_URL = '/auth/login/'
-LOGIN_REDIRECT_URL = '/feed/'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 
@@ -239,11 +237,12 @@ REST_FRAMEWORK = {
 # CORS (Cross-Origin Resource Sharing)
 # ==============================================================================
 
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173',
-    cast=Csv()
-)
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -270,25 +269,35 @@ CORS_ALLOW_HEADERS = [
 
 
 # ==============================================================================
-# CSRF (Cross-Site Request Forgery)
+# CSRF & SECURITY (Cross-Site Request Forgery)
 # ==============================================================================
 
-CSRF_TRUSTED_ORIGINS = config(
-    'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost:8000,http://127.0.0.1:8000',
-    cast=Csv()
-)
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://localhost',
+    'http://127.0.0.1',
+]
 
+# Configuración CSRF para desarrollo
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False
+
+# Configuración de sesiones para desarrollo
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 1209600  # 2 semanas
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_COOKIE_NAME = 'uniconet_sessionid'
 
 
 # ==============================================================================
 # INTERNATIONALIZATION
 # ==============================================================================
 
-LANGUAGE_CODE = config('LANGUAGE_CODE', default='es-ec')
-TIME_ZONE = config('TIME_ZONE', default='America/Guayaquil')
+LANGUAGE_CODE = 'es-ec'
+TIME_ZONE = 'America/Guayaquil'
 USE_I18N = True
 USE_TZ = True
 
@@ -297,7 +306,7 @@ USE_TZ = True
 # STATIC FILES (CSS, JavaScript, Images)
 # ==============================================================================
 
-STATIC_URL = config('STATIC_URL', default='/static/')
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
@@ -314,7 +323,7 @@ STATICFILES_FINDERS = [
 # MEDIA FILES (User Uploaded Files)
 # ==============================================================================
 
-MEDIA_URL = config('MEDIA_URL', default='/media/')
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
@@ -322,10 +331,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # EMAIL CONFIGURATION
 # ==============================================================================
 
-EMAIL_BACKEND = config(
-    'EMAIL_BACKEND',
-    default='django.core.mail.backends.console.EmailBackend'
-)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 if not DEBUG:
     EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
@@ -402,7 +408,7 @@ LOGS_DIR.mkdir(exist_ok=True)
 # ==============================================================================
 
 if not DEBUG:
-    # HTTPS/SSL
+    # HTTPS/SSL en producción
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -434,15 +440,6 @@ ALLOWED_DOCUMENT_TYPES = ['application/pdf', 'application/msword']
 
 
 # ==============================================================================
-# SESSION SETTINGS
-# ==============================================================================
-
-SESSION_COOKIE_AGE = 1209600  # 2 semanas
-SESSION_SAVE_EVERY_REQUEST = False
-SESSION_COOKIE_NAME = 'uniconet_sessionid'
-
-
-# ==============================================================================
 # DEBUG TOOLBAR (Solo en desarrollo)
 # ==============================================================================
 
@@ -454,8 +451,11 @@ if DEBUG:
     
     # Para Docker
     import socket
-    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-    INTERNAL_IPS += ['.'.join(ip.split('.')[:-1] + ['1']) for ip in ips]
+    try:
+        hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+        INTERNAL_IPS += ['.'.join(ip.split('.')[:-1] + ['1']) for ip in ips]
+    except:
+        pass
 
 
 # ==============================================================================

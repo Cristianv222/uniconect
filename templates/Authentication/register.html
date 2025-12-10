@@ -1,0 +1,663 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - UnicoNet</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary: #0d47a1;
+            --primary-dark: #002171;
+            --background: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-primary: #050505;
+            --text-secondary: #65676b;
+            --border-color: #dddfe2;
+            --success: #42b72a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .register-wrapper {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .brand-header h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin: 0;
+        }
+
+        .brand-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+
+        .register-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .register-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .register-subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Estilos para TODOS los inputs y selects */
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        input[type="tel"],
+        select,
+        .form-control,
+        .form-select {
+            border-radius: 6px;
+            padding: 11px 12px;
+            border: 1px solid var(--border-color);
+            font-size: 15px;
+            background-color: var(--background);
+            transition: border-color 0.2s;
+            width: 100%;
+            display: block;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus,
+        input[type="tel"]:focus,
+        select:focus,
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: none;
+            outline: none;
+            background-color: #fff;
+        }
+
+        input::placeholder {
+            color: #8a8d91;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .form-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            display: block;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .password-input-wrapper input {
+            padding-right: 40px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--text-secondary);
+            z-index: 10;
+            background: transparent;
+            border: none;
+            padding: 4px;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+
+        .password-strength {
+            height: 3px;
+            background: var(--border-color);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+
+        .strength-weak { background: #dc3545; width: 33%; }
+        .strength-medium { background: #ffc107; width: 66%; }
+        .strength-strong { background: var(--success); width: 100%; }
+
+        .strength-text {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .btn-register {
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            transition: background-color 0.2s;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+
+        .btn-register:hover {
+            background: #36a420;
+        }
+
+        .btn-register:active {
+            transform: scale(0.98);
+        }
+
+        .form-check {
+            margin: 16px 0;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .form-check-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .form-check-label a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .form-check-label a:hover {
+            text-decoration: underline;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-link p {
+            margin: 0;
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            border: none;
+        }
+
+        .alert-danger {
+            background-color: #ffebe8;
+            color: #c41e3a;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .text-danger {
+            color: #c41e3a !important;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .back-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-home a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            padding: 8px 16px;
+            background: var(--card-bg);
+            border-radius: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+        }
+
+        .back-home a:hover {
+            background: var(--background);
+            color: var(--text-primary);
+        }
+
+        .footer-text {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        /* Row improvements */
+        .row {
+            margin-left: -8px;
+            margin-right: -8px;
+        }
+
+        .row > [class*='col-'] {
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 576px) {
+            body {
+                padding: 20px 10px;
+            }
+
+            .register-card {
+                padding: 20px 16px;
+            }
+
+            .brand-header h1 {
+                font-size: 2rem;
+            }
+
+            .logo-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Back to home button -->
+    <div class="back-home">
+        <a href="{% url 'home' %}">
+            <i class="bi bi-arrow-left"></i>
+            Inicio
+        </a>
+    </div>
+
+    <div class="register-wrapper">
+        <!-- Brand header -->
+        <div class="brand-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h1>UnicoNet</h1>
+            </div>
+            <p>Únete a la comunidad universitaria UPEC</p>
+        </div>
+
+        <!-- Register card -->
+        <div class="register-card">
+            <h2 class="register-title">Crear cuenta nueva</h2>
+            <p class="register-subtitle">Es rápido y fácil.</p>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Register form -->
+            <form method="post" action="{% url 'authentication:register' %}" id="registerForm">
+                {% csrf_token %}
+
+                <!-- Personal info section -->
+                <div class="form-section">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                            <div class="text-danger">
+                                {{ form.first_name.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-6 mb-3">
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                            <div class="text-danger">
+                                {{ form.last_name.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account info section -->
+                <div class="form-section">
+                    <div class="mb-3">
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="text-danger">
+                            {{ form.email.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                        <div class="text-danger">
+                            {{ form.username.errors.0 }}
+                        </div>
+                        {% else %}
+                        <div class="form-text">3-30 caracteres: letras, números, guiones</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <div class="text-danger">
+                            {{ form.phone.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3 password-input-wrapper">
+                        {{ form.password1 }}
+                        <button type="button" class="password-toggle" onclick="togglePassword('id_password1', 'toggleIcon1')">
+                            <i class="bi bi-eye" id="toggleIcon1"></i>
+                        </button>
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="strengthBar"></div>
+                        </div>
+                        <div class="strength-text" id="strengthText"></div>
+                        {% if form.password1.errors %}
+                        <div class="text-danger">
+                            {{ form.password1.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3 password-input-wrapper">
+                        {{ form.password2 }}
+                        <button type="button" class="password-toggle" onclick="togglePassword('id_password2', 'toggleIcon2')">
+                            <i class="bi bi-eye" id="toggleIcon2"></i>
+                        </button>
+                        {% if form.password2.errors %}
+                        <div class="text-danger">
+                            {{ form.password2.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Academic info section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-mortarboard me-2"></i>Información Académica
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_user_type" class="form-label required-field">Tipo de usuario</label>
+                        {{ form.user_type }}
+                        {% if form.user_type.errors %}
+                        <div class="text-danger">
+                            {{ form.user_type.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_career" class="form-label">Carrera</label>
+                        {{ form.career }}
+                        {% if form.career.errors %}
+                        <div class="text-danger">
+                            {{ form.career.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label for="id_semester" class="form-label">Semestre</label>
+                            {{ form.semester }}
+                            {% if form.semester.errors %}
+                            <div class="text-danger">
+                                {{ form.semester.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-6 mb-3">
+                            <label for="id_student_id" class="form-label">Código</label>
+                            {{ form.student_id }}
+                            {% if form.student_id.errors %}
+                            <div class="text-danger">
+                                {{ form.student_id.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms -->
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="terms" required>
+                    <label class="form-check-label" for="terms">
+                        Al hacer clic en Registrarte, aceptas nuestras 
+                        <a href="#" target="_blank">Condiciones</a>, la 
+                        <a href="#" target="_blank">Política de privacidad</a> y la 
+                        <a href="#" target="_blank">Política de cookies</a>.
+                    </label>
+                </div>
+
+                <!-- Submit button -->
+                <button type="submit" class="btn btn-register">
+                    Registrarte
+                </button>
+            </form>
+        </div>
+
+        <!-- Login link -->
+        <div class="login-link">
+            <p>¿Ya tienes una cuenta? <a href="{% url 'authentication:login' %}">Inicia sesión</a></p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-text">
+            &copy; 2024 Universidad Politécnica Estatal del Carchi
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Toggle password visibility
+        function togglePassword(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+
+        // Password strength checker
+        const password1 = document.getElementById('id_password1');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+
+        if (password1) {
+            password1.addEventListener('input', function() {
+                const password = this.value;
+                
+                if (!password) {
+                    strengthBar.className = 'password-strength-bar';
+                    strengthText.textContent = '';
+                    return;
+                }
+                
+                let strength = 0;
+                
+                // Check length
+                if (password.length >= 8) strength++;
+                if (password.length >= 12) strength++;
+                
+                // Check for numbers
+                if (/\d/.test(password)) strength++;
+                
+                // Check for lowercase and uppercase
+                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+                
+                // Check for special characters
+                if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
+                
+                // Update UI
+                strengthBar.className = 'password-strength-bar';
+                
+                if (strength < 2) {
+                    strengthBar.classList.add('strength-weak');
+                    strengthText.textContent = 'Contraseña débil';
+                    strengthText.className = 'strength-text text-danger';
+                } else if (strength < 4) {
+                    strengthBar.classList.add('strength-medium');
+                    strengthText.textContent = 'Contraseña media';
+                    strengthText.className = 'strength-text text-warning';
+                } else {
+                    strengthBar.classList.add('strength-strong');
+                    strengthText.textContent = 'Contraseña fuerte';
+                    strengthText.className = 'strength-text text-success';
+                }
+            });
+        }
+
+        // Form validation feedback
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const terms = document.getElementById('terms');
+            if (!terms.checked) {
+                e.preventDefault();
+                alert('Debes aceptar los términos y condiciones para continuar');
+            }
+        });
+    </script>
+</body>
+</html>
