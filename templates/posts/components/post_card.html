@@ -1,0 +1,239 @@
+{% load static %}
+
+<div class="card mb-3 post-card" data-post-id="{{ post.id }}">
+    <div class="card-body">
+        <!-- Header del post -->
+        <div class="d-flex align-items-center mb-3">
+            <a href="{% url 'profiles:profile' post.author.username %}">
+                {% if post.author.profile.avatar %}
+                    <img src="{{ post.author.profile.avatar.url }}" class="rounded-circle me-2" width="40" height="40" alt="{{ post.author.get_full_name }}">
+                {% else %}
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                        {{ post.author.first_name.0 }}{{ post.author.last_name.0 }}
+                    </div>
+                {% endif %}
+            </a>
+            <div class="flex-grow-1">
+                <a href="{% url 'profiles:profile' post.author.username %}" class="text-decoration-none text-dark">
+                    <strong>{{ post.author.get_full_name }}</strong>
+                </a>
+                <small class="text-muted d-block">
+                    @{{ post.author.username }} · {{ post.created_at|timesince }} atrás
+                    {% if post.is_edited %}
+                        · <i class="bi bi-pencil-square" title="Editado"></i>
+                    {% endif %}
+                    
+                    <!-- Badge de privacidad -->
+                    {% if post.privacy == 'friends' %}
+                        <i class="bi bi-people-fill text-primary" title="Solo amigos"></i>
+                    {% elif post.privacy == 'private' %}
+                        <i class="bi bi-lock-fill text-secondary" title="Privado"></i>
+                    {% endif %}
+                    
+                    <!-- Badge de fijado -->
+                    {% if post.is_pinned %}
+                        <i class="bi bi-pin-angle-fill text-warning" title="Publicación fijada"></i>
+                    {% endif %}
+                </small>
+            </div>
+            
+            <!-- Menú de opciones -->
+            {% if post.author == user %}
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="pinPost({{ post.id }}); return false;">
+                            <i class="bi bi-pin"></i> {% if post.is_pinned %}Desfijar{% else %}Fijar{% endif %}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalEditPost" onclick="loadEditPost({{ post.id }})">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="archivePost({{ post.id }}); return false;">
+                            <i class="bi bi-archive"></i> Archivar
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#modalDeletePost" onclick="setDeletePost({{ post.id }})">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% else %}
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#modalReportPost" onclick="setReportPost({{ post.id }})">
+                            <i class="bi bi-flag"></i> Reportar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Post compartido (si existe) -->
+        {% if post.shared_post %}
+        <div class="mb-2">
+            <small class="text-muted">
+                <i class="bi bi-arrow-repeat"></i> Compartió la publicación de 
+                <a href="{% url 'profiles:profile' post.shared_post.author.username %}">{{ post.shared_post.author.get_full_name }}</a>
+            </small>
+        </div>
+        {% endif %}
+
+        <!-- Contenido del post -->
+        {% if post.content %}
+        <div class="post-content mb-3">
+            <p class="mb-0">{{ post.content|linebreaks }}</p>
+            
+            <!-- Hashtags -->
+            {% if post.post_hashtags.all %}
+            <div class="mt-2">
+                {% for post_hashtag in post.post_hashtags.all %}
+                    <a href="{% url 'posts:hashtag_posts' post_hashtag.hashtag.name %}" class="badge bg-primary text-decoration-none me-1">
+                        #{{ post_hashtag.hashtag.name }}
+                    </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Menciones -->
+            {% if post.mentions.all %}
+            <div class="mt-2">
+                <small class="text-muted">
+                    Con: 
+                    {% for mention in post.mentions.all %}
+                        <a href="{% url 'profiles:profile' mention.user.username %}">{{ mention.user.get_full_name }}</a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </small>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Post compartido original (preview) -->
+        {% if post.shared_post %}
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    {% if post.shared_post.author.profile.avatar %}
+                        <img src="{{ post.shared_post.author.profile.avatar.url }}" class="rounded-circle me-2" width="32" height="32" alt="{{ post.shared_post.author.get_full_name }}">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                            {{ post.shared_post.author.first_name.0 }}
+                        </div>
+                    {% endif %}
+                    <div>
+                        <strong>{{ post.shared_post.author.get_full_name }}</strong>
+                        <small class="text-muted d-block">{{ post.shared_post.created_at|timesince }} atrás</small>
+                    </div>
+                </div>
+                {% if post.shared_post.content %}
+                    <p class="mb-2">{{ post.shared_post.content|truncatewords:30 }}</p>
+                {% endif %}
+                {% if post.shared_post.images.first %}
+                    <img src="{{ post.shared_post.images.first.image.url }}" class="img-fluid rounded" style="max-height: 200px;" alt="Imagen">
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Imágenes del post -->
+        {% if post.images.all %}
+        <div class="post-images mb-3">
+            {% if post.images.count == 1 %}
+                <img src="{{ post.images.first.image.url }}" class="img-fluid rounded w-100" style="max-height: 500px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ post.images.first.image.url }}')">
+            {% elif post.images.count == 2 %}
+                <div class="row g-2">
+                    {% for image in post.images.all %}
+                    <div class="col-6">
+                        <img src="{{ image.image.url }}" class="img-fluid rounded w-100" style="height: 250px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ image.image.url }}')">
+                    </div>
+                    {% endfor %}
+                </div>
+            {% elif post.images.count == 3 %}
+                <div class="row g-2">
+                    <div class="col-12">
+                        <img src="{{ post.images.0.image.url }}" class="img-fluid rounded w-100" style="height: 300px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ post.images.0.image.url }}')">
+                    </div>
+                    <div class="col-6">
+                        <img src="{{ post.images.1.image.url }}" class="img-fluid rounded w-100" style="height: 200px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ post.images.1.image.url }}')">
+                    </div>
+                    <div class="col-6">
+                        <img src="{{ post.images.2.image.url }}" class="img-fluid rounded w-100" style="height: 200px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ post.images.2.image.url }}')">
+                    </div>
+                </div>
+            {% else %}
+                <div class="row g-2">
+                    {% for image in post.images.all|slice:":4" %}
+                    <div class="col-6">
+                        <div class="position-relative">
+                            <img src="{{ image.image.url }}" class="img-fluid rounded w-100" style="height: 200px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ image.image.url }}')">
+                            {% if forloop.counter == 4 and post.images.count > 4 %}
+                                <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 rounded d-flex align-items-center justify-content-center text-white">
+                                    <h3>+{{ post.images.count|add:"-4" }}</h3>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Videos del post -->
+        {% if post.videos.all %}
+        <div class="post-videos mb-3">
+            {% for video in post.videos.all %}
+            <video controls class="w-100 rounded mb-2" style="max-height: 400px;">
+                <source src="{{ video.video.url }}" type="video/mp4">
+                Tu navegador no soporta el tag de video.
+            </video>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Estadísticas -->
+        <div class="d-flex justify-content-between align-items-center mb-2 pt-2 border-top">
+            <small class="text-muted">
+                {% if post.likes_count > 0 %}
+                    <i class="bi bi-heart-fill text-danger"></i> {{ post.likes_count }} me gusta
+                {% endif %}
+            </small>
+            <small class="text-muted">
+                {% if post.comments_count > 0 %}
+                    {{ post.comments_count }} comentario{{ post.comments_count|pluralize }}
+                {% endif %}
+                {% if post.shares_count > 0 %}
+                    · {{ post.shares_count }} veces compartido
+                {% endif %}
+            </small>
+        </div>
+
+        <!-- Acciones -->
+        <div class="d-flex justify-content-around border-top pt-2">
+            <button class="btn btn-light flex-fill me-1" onclick="toggleLike({{ post.id }})">
+                <i class="bi bi-heart"></i> Me gusta
+            </button>
+            <a href="{% url 'posts:post_detail' post.id %}" class="btn btn-light flex-fill mx-1">
+                <i class="bi bi-chat"></i> Comentar
+            </a>
+            <button class="btn btn-light flex-fill ms-1" data-bs-toggle="modal" data-bs-target="#modalSharePost" onclick="setSharePost({{ post.id }})">
+                <i class="bi bi-share"></i> Compartir
+            </button>
+        </div>
+    </div>
+</div>

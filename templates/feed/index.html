@@ -1,42 +1,246 @@
 {% extends 'components/base_authenticated.html' %}
+{% load static %}
 
 {% block title %}Inicio - Feed{% endblock %}
 
+{% block extra_css %}
+<style>
+    .create-post-trigger {
+        cursor: pointer;
+        background-color: #f0f2f5;
+        border-radius: 25px;
+        padding: 10px 15px;
+        border: none;
+        width: 100%;
+        text-align: left;
+        color: #65676b;
+        transition: background-color 0.2s;
+    }
+    .create-post-trigger:hover {
+        background-color: #e4e6eb;
+    }
+    .avatar-placeholder {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    .posts-container .post-card {
+        animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
+<div class="container-fluid">
     <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
-                    <h2 class="mt-3">¡Bienvenido a UnicoNet!</h2>
-                    <p class="lead">Hola <strong>{{ user.get_full_name }}</strong>, has iniciado sesión exitosamente.</p>
-                    <p class="text-muted">El feed principal está en desarrollo. Por ahora puedes explorar tu perfil.</p>
-                    <div class="mt-4">
-                        <a href="{% url 'profiles:profile' user.username %}" class="btn btn-primary">
-                            <i class="bi bi-person me-2"></i>Ver mi perfil
-                        </a>
+        <!-- Columna central del feed -->
+        <div class="col-lg-8 mx-auto">
+<div class="container-fluid">
+    <div class="row">
+        <!-- Columna central del feed -->
+        <div class="col-lg-8 mx-auto">
+            <!-- Crear publicación -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if user.profile.profile_image %}
+                            <img src="{{ user.profile.profile_image.url }}" 
+                                 class="rounded-circle me-2" 
+                                 width="40" 
+                                 height="40" 
+                                 alt="Avatar"
+                                 style="object-fit: cover;">
+                        {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ user.get_full_name|urlencode }}&background=0d47a1&color=fff" 
+                                 class="rounded-circle me-2" 
+                                 width="40" 
+                                 height="40" 
+                                 alt="{{ user.get_full_name }}">
+                        {% endif %}
+                        <button class="create-post-trigger" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalCreatePost">
+                            ¿Qué estás pensando, {{ user.first_name }}?
+                        </button>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-around">
+                        <button class="btn btn-light flex-fill me-1" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalCreatePost">
+                            <i class="bi bi-image text-success"></i> 
+                            <span class="d-none d-md-inline">Foto</span>
+                        </button>
+                        <button class="btn btn-light flex-fill mx-1" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalCreatePost">
+                            <i class="bi bi-camera-video text-danger"></i> 
+                            <span class="d-none d-md-inline">Video</span>
+                        </button>
+                        <button class="btn btn-light flex-fill ms-1" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalCreatePost">
+                            <i class="bi bi-emoji-smile text-warning"></i> 
+                            <span class="d-none d-md-inline">Sentimiento</span>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Tu información</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Email:</strong> {{ user.email }}</p>
-                    <p><strong>Username:</strong> {{ user.username }}</p>
-                    <p><strong>Tipo de usuario:</strong> {{ user.get_user_type_display }}</p>
-                    {% if user.career %}
-                    <p><strong>Carrera:</strong> {{ user.get_career_display }}</p>
-                    {% endif %}
-                    {% if user.semester %}
-                    <p><strong>Semestre:</strong> {{ user.semester }}</p>
-                    {% endif %}
-                </div>
+            <!-- Lista de publicaciones -->
+            <div class="posts-container">
+                {% if posts %}
+                    {% for post in posts %}
+                        {% include 'posts/components/post_card.html' with post=post %}
+                    {% endfor %}
+                    
+                    <!-- Botón cargar más -->
+                    <div class="text-center my-4">
+                        <button class="btn btn-outline-primary" onclick="loadMorePosts()">
+                            <i class="bi bi-arrow-clockwise"></i> Cargar más publicaciones
+                        </button>
+                    </div>
+                {% else %}
+                    <!-- Estado vacío - Bienvenida -->
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-check-circle text-success" style="font-size: 5rem;"></i>
+                            <h3 class="mt-4 mb-2">¡Bienvenido a UnicoNet!</h3>
+                            <p class="lead">Hola <strong>{{ user.get_full_name }}</strong>, has iniciado sesión exitosamente.</p>
+                            <p class="text-muted mb-4">
+                                Tu feed está vacío. Comienza siguiendo a otros usuarios<br>
+                                o crea tu primera publicación para comenzar.
+                            </p>
+                            <div class="d-flex justify-content-center gap-2 mb-4">
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCreatePost">
+                                    <i class="bi bi-plus-circle"></i> Crear Publicación
+                                </button>
+                                <a href="{% url 'friends:find_friends' %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-people"></i> Buscar Amigos
+                                </a>
+                            </div>
+
+                            <!-- Card de información del usuario -->
+                            <div class="card mt-4 text-start">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-info-circle"></i> Tu información
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <p class="mb-2">
+                                                <i class="bi bi-envelope text-primary"></i>
+                                                <strong>Email:</strong> {{ user.email }}
+                                            </p>
+                                            <p class="mb-2">
+                                                <i class="bi bi-at text-primary"></i>
+                                                <strong>Username:</strong> @{{ user.username }}
+                                            </p>
+                                            <p class="mb-2">
+                                                <i class="bi bi-person-badge text-primary"></i>
+                                                <strong>Tipo:</strong> {{ user.get_user_type_display }}
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            {% if user.career %}
+                                            <p class="mb-2">
+                                                <i class="bi bi-book text-primary"></i>
+                                                <strong>Carrera:</strong> {{ user.get_career_display }}
+                                            </p>
+                                            {% endif %}
+                                            {% if user.semester %}
+                                            <p class="mb-2">
+                                                <i class="bi bi-calendar3 text-primary"></i>
+                                                <strong>Semestre:</strong> {{ user.semester }}
+                                            </p>
+                                            {% endif %}
+                                            {% if user.date_joined %}
+                                            <p class="mb-2">
+                                                <i class="bi bi-calendar-check text-primary"></i>
+                                                <strong>Miembro desde:</strong> {{ user.date_joined|date:"d/m/Y" }}
+                                            </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="text-center">
+                                        <a href="{% url 'profiles:profile' user.username %}" class="btn btn-primary">
+                                            <i class="bi bi-person"></i> Ver mi perfil
+                                        </a>
+                                        <a href="{% url 'profiles:profile-edit' %}" class="btn btn-outline-primary">
+                                            <i class="bi bi-pencil"></i> Completar perfil
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tips rápidos -->
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-lightbulb"></i> Comienza en UnicoNet
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group list-group-flush">
+                                        <a href="{% url 'profiles:profile-edit' %}" class="list-group-item list-group-item-action">
+                                            <i class="bi bi-1-circle text-primary me-2"></i>
+                                            <strong>Completa tu perfil</strong>
+                                            <small class="d-block text-muted">Agrega una foto y biografía</small>
+                                        </a>
+                                        <a href="{% url 'friends:find_friends' %}" class="list-group-item list-group-item-action">
+                                            <i class="bi bi-2-circle text-primary me-2"></i>
+                                            <strong>Encuentra amigos</strong>
+                                            <small class="d-block text-muted">Busca y conecta con compañeros</small>
+                                        </a>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCreatePost" class="list-group-item list-group-item-action">
+                                            <i class="bi bi-3-circle text-primary me-2"></i>
+                                            <strong>Crea tu primera publicación</strong>
+                                            <small class="d-block text-muted">Comparte con la comunidad UPEC</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Incluir modales de posts -->
+{% include 'posts/modals.html' %}
+
+<!-- Toast container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="toastContainer"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/posts.js' %}"></script>
+<script>
+    console.log('Feed cargado para {{ user.first_name }}');
+    
+    // Auto-focus en modal de crear post
+    document.getElementById('modalCreatePost')?.addEventListener('shown.bs.modal', function () {
+        this.querySelector('textarea[name="content"]')?.focus();
+    });
+
+    // Función para cargar más posts (placeholder)
+    function loadMorePosts() {
+        console.log('Cargando más posts...');
+        // TODO: Implementar carga con AJAX
+    }
+</script>
 {% endblock %}

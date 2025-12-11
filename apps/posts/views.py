@@ -204,8 +204,25 @@ def post_create(request):
                     order=idx
                 )
             
+            # Si es AJAX, retornar JSON
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'post_id': post.pk,
+                    'message': 'Publicación creada exitosamente'
+                })
+            
+            # Si no es AJAX, redirigir al feed
             messages.success(request, _('Publicación creada exitosamente.'))
-            return redirect('posts:post_detail', pk=post.pk)
+            return redirect('feed:home')
+        else:
+            # Si hay errores en el formulario
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Por favor completa el formulario correctamente',
+                    'errors': form.errors
+                }, status=400)
     else:
         form = PostForm()
     
@@ -213,7 +230,6 @@ def post_create(request):
         'form': form,
     }
     return render(request, 'posts/post_create.html', context)
-
 
 @login_required
 def post_edit(request, pk):

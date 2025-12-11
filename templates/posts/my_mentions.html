@@ -1,0 +1,70 @@
+{% extends 'components/base_authenticated.html' %}
+{% load static %}
+
+{% block title %}Mis Menciones - UnicoNet{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>
+                    <i class="bi bi-at"></i> 
+                    Mis Menciones
+                </h3>
+                <a href="{% url 'feed:home' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            {% if posts %}
+                {% for post in posts %}
+                    {% include 'posts/components/post_card.html' with post=post %}
+                {% endfor %}
+
+                <!-- Paginación -->
+                {% if posts.has_other_pages %}
+                <nav aria-label="Paginación">
+                    <ul class="pagination justify-content-center">
+                        {% if posts.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ posts.previous_page_number }}">Anterior</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in posts.paginator.page_range %}
+                            {% if posts.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if posts.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ posts.next_page_number }}">Siguiente</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-at" style="font-size: 4rem; color: #ccc;"></i>
+                        <h5 class="mt-3">No tienes menciones</h5>
+                        <p class="text-muted">Cuando alguien te mencione en una publicación, aparecerá aquí</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Incluir modales -->
+{% include 'posts/modals.html' %}
+{% endblock %}

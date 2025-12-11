@@ -1,0 +1,283 @@
+{% load static %}
+
+<!-- ============================================ -->
+<!-- MODAL: Crear Post -->
+<!-- ============================================ -->
+<div class="modal fade" id="modalCreatePost" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Crear publicación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formCreatePost" method="post" action="{% url 'posts:post_create' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" width="40" height="40" alt="Avatar">
+                        {% else %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                {{ user.first_name.0 }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <strong>{{ user.get_full_name }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <textarea name="content" class="form-control border-0" rows="4" placeholder="¿Qué estás pensando?" autofocus></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Privacidad</label>
+                        <select name="privacy" class="form-select">
+                            <option value="public">Público</option>
+                            <option value="friends">Amigos</option>
+                            <option value="private">Solo yo</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Imágenes</label>
+                        <input type="file" name="images" class="form-control" multiple accept="image/*">
+                        <small class="text-muted">Puedes seleccionar múltiples imágenes</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Videos</label>
+                        <input type="file" name="videos" class="form-control" multiple accept="video/*">
+                        <small class="text-muted">Puedes seleccionar múltiples videos</small>
+                    </div>
+
+                    <div id="previewMedia" class="mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Publicar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL: Editar Post -->
+<!-- ============================================ -->
+<div class="modal fade" id="modalEditPost" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar publicación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditPost" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="post_id" id="edit_post_id">
+                    
+                    <div class="mb-3">
+                        <textarea name="content" id="edit_content" class="form-control border-0" rows="4" placeholder="¿Qué estás pensando?"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Privacidad</label>
+                        <select name="privacy" id="edit_privacy" class="form-select">
+                            <option value="public">Público</option>
+                            <option value="friends">Amigos</option>
+                            <option value="private">Solo yo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL: Eliminar Post -->
+<!-- ============================================ -->
+<div class="modal fade" id="modalDeletePost" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Eliminar publicación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta publicación?</p>
+                <p class="text-muted mb-0">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <form id="formDeletePost" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="post_id" id="delete_post_id">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL: Compartir Post -->
+<!-- ============================================ -->
+<div class="modal fade" id="modalSharePost" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Compartir publicación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formSharePost" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="post_id" id="share_post_id">
+                    
+                    <div class="mb-3">
+                        <textarea name="content" class="form-control border-0" rows="3" placeholder="Añade un comentario (opcional)"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Compartir con</label>
+                        <select name="privacy" class="form-select">
+                            <option value="public">Público</option>
+                            <option value="friends">Amigos</option>
+                            <option value="private">Solo yo</option>
+                        </select>
+                    </div>
+
+                    <div id="sharePostPreview" class="card bg-light">
+                        <!-- Aquí se cargará el preview del post a compartir -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Compartir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL: Reportar Post -->
+<!-- ============================================ -->
+<div class="modal fade" id="modalReportPost" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reportar publicación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formReportPost" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="post_id" id="report_post_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Motivo del reporte</label>
+                        <select name="reason" class="form-select" required>
+                            <option value="">Selecciona un motivo</option>
+                            <option value="spam">Spam</option>
+                            <option value="inappropriate">Contenido inapropiado</option>
+                            <option value="harassment">Acoso</option>
+                            <option value="fake_news">Noticias falsas</option>
+                            <option value="violence">Violencia</option>
+                            <option value="hate_speech">Discurso de odio</option>
+                            <option value="other">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descripción (opcional)</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Proporciona más detalles..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Enviar reporte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL: Ver Imagen (Lightbox) -->
+<!-- ============================================ -->
+<div class="modal fade" id="modalImageViewer" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="imageViewerSrc" src="" class="img-fluid" alt="Imagen" style="max-height: 90vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript para modales -->
+<script>
+// Funciones para manejar modales
+
+function setDeletePost(postId) {
+    document.getElementById('delete_post_id').value = postId;
+    document.getElementById('formDeletePost').action = `/posts/${postId}/delete/`;
+}
+
+function setSharePost(postId) {
+    document.getElementById('share_post_id').value = postId;
+    document.getElementById('formSharePost').action = `/posts/${postId}/share/`;
+    // Cargar preview del post
+    // TODO: Implementar carga AJAX del post
+}
+
+function setReportPost(postId) {
+    document.getElementById('report_post_id').value = postId;
+    document.getElementById('formReportPost').action = `/posts/${postId}/report/`;
+}
+
+function loadEditPost(postId) {
+    // TODO: Cargar datos del post via AJAX
+    fetch(`/posts/${postId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('edit_post_id').value = postId;
+            document.getElementById('edit_content').value = data.content;
+            document.getElementById('edit_privacy').value = data.privacy;
+            document.getElementById('formEditPost').action = `/posts/${postId}/edit/`;
+        });
+}
+
+function openImageModal(imageUrl) {
+    document.getElementById('imageViewerSrc').src = imageUrl;
+    new bootstrap.Modal(document.getElementById('modalImageViewer')).show();
+}
+
+// Preview de archivos al seleccionar
+document.querySelector('input[name="images"]')?.addEventListener('change', function(e) {
+    const preview = document.getElementById('previewMedia');
+    preview.innerHTML = '';
+    
+    Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'img-thumbnail me-2 mb-2';
+            img.style.maxHeight = '100px';
+            preview.appendChild(img);
+        }
+        reader.readAsDataURL(file);
+    });
+});
+</script>

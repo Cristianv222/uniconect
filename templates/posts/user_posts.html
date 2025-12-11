@@ -1,0 +1,112 @@
+{% extends 'components/base_authenticated.html' %}
+{% load static %}
+
+{% block title %}Publicaciones de {{ profile_user.get_full_name }} - UnicoNet{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar con info del usuario -->
+        <div class="col-lg-3">
+            <div class="card sticky-top" style="top: 80px;">
+                <div class="card-body text-center">
+                    {% if profile_user.profile.avatar %}
+                        <img src="{{ profile_user.profile.avatar.url }}" class="rounded-circle mb-3" width="120" height="120" alt="Avatar">
+                    {% else %}
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 3rem;">
+                            {{ profile_user.first_name.0 }}{{ profile_user.last_name.0 }}
+                        </div>
+                    {% endif %}
+                    <h5 class="mb-1">{{ profile_user.get_full_name }}</h5>
+                    <p class="text-muted">@{{ profile_user.username }}</p>
+                    
+                    {% if profile_user.profile.bio %}
+                    <p class="small">{{ profile_user.profile.bio }}</p>
+                    {% endif %}
+
+                    <hr>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'profiles:profile' profile_user.username %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-person"></i> Ver perfil completo
+                        </a>
+                        
+                        {% if profile_user != user %}
+                            <a href="{% url 'messaging:conversation_create' profile_user.username %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-chat"></i> Enviar mensaje
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Posts del usuario -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>
+                    <i class="bi bi-file-post"></i> 
+                    Publicaciones de {{ profile_user.first_name }}
+                </h4>
+                <a href="{% url 'feed:home' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            {% if posts %}
+                {% for post in posts %}
+                    {% include 'posts/components/post_card.html' with post=post %}
+                {% endfor %}
+
+                <!-- Paginación -->
+                {% if posts.has_other_pages %}
+                <nav aria-label="Paginación">
+                    <ul class="pagination justify-content-center">
+                        {% if posts.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ posts.previous_page_number }}">Anterior</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in posts.paginator.page_range %}
+                            {% if posts.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if posts.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ posts.next_page_number }}">Siguiente</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                        <h5 class="mt-3">No hay publicaciones</h5>
+                        <p class="text-muted">
+                            {% if profile_user == user %}
+                                Aún no has creado ninguna publicación.
+                            {% else %}
+                                {{ profile_user.first_name }} no ha publicado nada aún.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Incluir modales -->
+{% include 'posts/modals.html' %}
+{% endblock %}
