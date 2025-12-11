@@ -1,0 +1,320 @@
+{% extends 'components/base_authenticated.html' %}
+{% load static %}
+
+{% block title %}Configuración de Privacidad - UnicoNet{% endblock %}
+
+{% block extra_css %}
+<style>
+    .privacy-card {
+        border-left: 4px solid var(--primary);
+    }
+    
+    .privacy-option {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+    }
+    
+    .privacy-option:last-child {
+        border-bottom: none;
+    }
+    
+    .privacy-option:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #e3f2fd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 1.5rem;
+    }
+    
+    .help-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <i class="bi bi-shield-lock me-2 text-primary"></i>
+                        Configuración de Privacidad
+                    </h2>
+                    <p class="text-muted mb-0">Controla quién puede ver tu información y cómo interactúas en UnicoNet</p>
+                </div>
+                <a href="{% url 'profiles:profile' user.username %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Volver al perfil
+                </a>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Visibilidad del Perfil -->
+                <div class="card privacy-card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="section-icon me-3">
+                                <i class="bi bi-eye"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Visibilidad del Perfil</h5>
+                                <p class="text-muted mb-0">Controla quién puede ver diferentes partes de tu perfil</p>
+                            </div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <label class="form-label fw-bold">Perfil General</label>
+                            <select name="profile_visibility" class="form-select">
+                                <option value="public" {% if form.profile_visibility.value == 'public' %}selected{% endif %}>Público - Todos pueden ver</option>
+                                <option value="friends" {% if form.profile_visibility.value == 'friends' %}selected{% endif %}>Amigos - Solo mis amigos</option>
+                                <option value="private" {% if form.profile_visibility.value == 'private' %}selected{% endif %}>Privado - Solo yo</option>
+                            </select>
+                            <div class="help-text">Quién puede ver tu perfil completo</div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <label class="form-label fw-bold">Email</label>
+                            <select name="email_visibility" class="form-select">
+                                <option value="public" {% if form.email_visibility.value == 'public' %}selected{% endif %}>Público</option>
+                                <option value="friends" {% if form.email_visibility.value == 'friends' %}selected{% endif %}>Solo amigos</option>
+                                <option value="private" {% if form.email_visibility.value == 'private' %}selected{% endif %}>Privado</option>
+                            </select>
+                            <div class="help-text">Quién puede ver tu correo electrónico</div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <label class="form-label fw-bold">Teléfono</label>
+                            <select name="phone_visibility" class="form-select">
+                                <option value="public" {% if form.phone_visibility.value == 'public' %}selected{% endif %}>Público</option>
+                                <option value="friends" {% if form.phone_visibility.value == 'friends' %}selected{% endif %}>Solo amigos</option>
+                                <option value="private" {% if form.phone_visibility.value == 'private' %}selected{% endif %}>Privado</option>
+                            </select>
+                            <div class="help-text">Quién puede ver tu número de teléfono</div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <label class="form-label fw-bold">Fecha de Nacimiento</label>
+                            <select name="birth_date_visibility" class="form-select">
+                                <option value="public" {% if form.birth_date_visibility.value == 'public' %}selected{% endif %}>Público</option>
+                                <option value="friends" {% if form.birth_date_visibility.value == 'friends' %}selected{% endif %}>Solo amigos</option>
+                                <option value="private" {% if form.birth_date_visibility.value == 'private' %}selected{% endif %}>Privado</option>
+                            </select>
+                            <div class="help-text">Quién puede ver tu fecha de nacimiento y edad</div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <label class="form-label fw-bold">Lista de Amigos</label>
+                            <select name="friend_list_visibility" class="form-select">
+                                <option value="public" {% if form.friend_list_visibility.value == 'public' %}selected{% endif %}>Público</option>
+                                <option value="friends" {% if form.friend_list_visibility.value == 'friends' %}selected{% endif %}>Solo amigos</option>
+                                <option value="private" {% if form.friend_list_visibility.value == 'private' %}selected{% endif %}>Privado</option>
+                            </select>
+                            <div class="help-text">Quién puede ver tu lista de amigos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Publicaciones -->
+                <div class="card privacy-card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="section-icon me-3">
+                                <i class="bi bi-file-post"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Publicaciones</h5>
+                                <p class="text-muted mb-0">Controla la privacidad de tus publicaciones</p>
+                            </div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <label class="form-label fw-bold">Privacidad por defecto de nuevas publicaciones</label>
+                            <select name="default_post_privacy" class="form-select">
+                                <option value="public" {% if form.default_post_privacy.value == 'public' %}selected{% endif %}>Público - Todos pueden ver</option>
+                                <option value="friends" {% if form.default_post_privacy.value == 'friends' %}selected{% endif %}>Amigos - Solo mis amigos</option>
+                                <option value="private" {% if form.default_post_privacy.value == 'private' %}selected{% endif %}>Privado - Solo yo</option>
+                            </select>
+                            <div class="help-text">Esta será la configuración predeterminada al crear un nuevo post</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensajería -->
+                <div class="card privacy-card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="section-icon me-3">
+                                <i class="bi bi-chat-dots"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Mensajería</h5>
+                                <p class="text-muted mb-0">Controla quién puede enviarte mensajes</p>
+                            </div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <label class="form-label fw-bold">¿Quién puede enviarte mensajes?</label>
+                            <select name="who_can_message" class="form-select">
+                                <option value="public" {% if form.who_can_message.value == 'public' %}selected{% endif %}>Todos</option>
+                                <option value="friends" {% if form.who_can_message.value == 'friends' %}selected{% endif %}>Solo amigos</option>
+                                <option value="private" {% if form.who_can_message.value == 'private' %}selected{% endif %}>Nadie</option>
+                            </select>
+                            <div class="help-text">Controla quién puede iniciar una conversación contigo</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notificaciones -->
+                <div class="card privacy-card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="section-icon me-3">
+                                <i class="bi bi-bell"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Notificaciones</h5>
+                                <p class="text-muted mb-0">Administra cómo y cuándo recibir notificaciones</p>
+                            </div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="email_notifications" id="email_notifications" 
+                                       {% if form.email_notifications.value %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="email_notifications">
+                                    Notificaciones por Email
+                                </label>
+                            </div>
+                            <div class="help-text">Recibir notificaciones en tu correo electrónico</div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="push_notifications" id="push_notifications" 
+                                       {% if form.push_notifications.value %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="push_notifications">
+                                    Notificaciones Push
+                                </label>
+                            </div>
+                            <div class="help-text">Recibir notificaciones push en el navegador</div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="friend_request_notifications" id="friend_request_notifications" 
+                                       {% if form.friend_request_notifications.value %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="friend_request_notifications">
+                                    Solicitudes de Amistad
+                                </label>
+                            </div>
+                            <div class="help-text">Notificar cuando alguien te envíe una solicitud de amistad</div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="post_like_notifications" id="post_like_notifications" 
+                                       {% if form.post_like_notifications.value %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="post_like_notifications">
+                                    Me Gusta en Publicaciones
+                                </label>
+                            </div>
+                            <div class="help-text">Notificar cuando alguien le dé "me gusta" a tu publicación</div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="comment_notifications" id="comment_notifications" 
+                                       {% if form.comment_notifications.value %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="comment_notifications">
+                                    Comentarios
+                                </label>
+                            </div>
+                            <div class="help-text">Notificar cuando alguien comente en tus publicaciones</div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="mention_notifications" id="mention_notifications" 
+                                       {% if form.mention_notifications.value %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="mention_notifications">
+                                    Menciones
+                                </label>
+                            </div>
+                            <div class="help-text">Notificar cuando alguien te mencione en una publicación o comentario</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'profiles:profile' user.username %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Guardar Configuración
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info adicional -->
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Nota:</strong> Estos cambios afectarán cómo otros usuarios pueden interactuar contigo y ver tu información en UnicoNet.
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confirmación antes de salir si hay cambios sin guardar
+let formChanged = false;
+
+document.querySelectorAll('select, input[type="checkbox"]').forEach(element => {
+    element.addEventListener('change', () => {
+        formChanged = true;
+    });
+});
+
+document.querySelector('form').addEventListener('submit', () => {
+    formChanged = false;
+});
+
+window.addEventListener('beforeunload', (e) => {
+    if (formChanged) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+</script>
+{% endblock %}

@@ -509,3 +509,12 @@ CACHE_TIMEOUT = {
     'notifications': 60,    # 1 minuto
     'friends': 60 * 30,    # 30 minutos
 }
+# URL para acceder a los archivos media desde el navegador
+MEDIA_URL = '/media/'
+
+# Directorio físico donde se guardarán los archivos subidos
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Opcional: Limitar tamaño de archivos subidos
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB en bytes
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB en bytes

@@ -1,0 +1,1130 @@
+{% extends 'components/base_authenticated.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.get_full_name }} (@{{ profile_user.username }}) - UnicoNet{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Cover Image Styles */
+    .profile-cover {
+        position: relative;
+        height: 320px;
+        background: #f0f2f5;
+        border-radius: 8px 8px 0 0;
+        overflow: hidden;
+    }
+    
+    .profile-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .profile-cover-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
+    }
+    
+    .profile-cover-placeholder i {
+        font-size: 5rem;
+        color: #cbd5e1;
+    }
+    
+    /* Profile Image Styles */
+    .profile-image-wrapper {
+        position: relative;
+        margin-top: -80px;
+        margin-left: 30px;
+        z-index: 10;
+    }
+    
+    .profile-image {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 6px solid white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        background: white;
+    }
+    
+    .profile-placeholder {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: #e9ecef;
+        border: 6px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .profile-placeholder i {
+        font-size: 5rem;
+        color: #adb5bd;
+    }
+    
+    /* Stats */
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+    
+    .stat-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: bold;
+        color: #1e40af;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+    
+    /* Social Links */
+    .social-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #f1f3f5;
+        color: #495057;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .social-link:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        color: #1e40af;
+        background: #e7f5ff;
+    }
+    
+    /* Experience Items */
+    .experience-item {
+        padding: 20px;
+        border-left: 4px solid #1e40af;
+        margin-bottom: 20px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        transition: all 0.3s;
+    }
+    
+    .experience-item:hover {
+        background: #e9ecef;
+        border-left-color: #1e3a8a;
+        transform: translateX(4px);
+    }
+    
+    /* Skill Badge */
+    .skill-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: #e7f5ff;
+        color: #1e40af;
+        border-radius: 25px;
+        margin: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .skill-badge:hover {
+        background: #d0ebff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .skill-badge .badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+    
+    /* Cards */
+    .card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .card-title {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    /* Modal Improvements */
+    .modal-dialog-scrollable .modal-body {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .modal-footer {
+        border-top: 2px solid #e9ecef;
+        padding: 1rem 1.5rem;
+    }
+    
+    /* Form Sections in Modal */
+    .form-section-title {
+        color: #1e40af;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e7f5ff;
+    }
+    
+    .form-section-title:first-child {
+        margin-top: 0;
+    }
+    
+    /* Info Items */
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        color: #495057;
+    }
+    
+    .info-item i {
+        font-size: 1.2rem;
+        width: 24px;
+        text-align: center;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: #1e40af;
+        border-color: #1e40af;
+    }
+    
+    .btn-primary:hover {
+        background: #1e3a8a;
+        border-color: #1e3a8a;
+    }
+    
+    .btn-outline-primary {
+        color: #1e40af;
+        border-color: #1e40af;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #1e40af;
+        border-color: #1e40af;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Profile Header Card -->
+    <div class="card">
+        <!-- Cover Image -->
+        <div class="profile-cover">
+            {% if user_profile.cover_image %}
+                <img src="{{ user_profile.cover_image.url }}" alt="Portada de {{ profile_user.get_full_name }}">
+            {% else %}
+                <div class="profile-cover-placeholder">
+                    <i class="bi bi-image"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <!-- Profile Image Column -->
+                <div class="col-md-3">
+                    <div class="profile-image-wrapper">
+                        {% if user_profile.profile_image %}
+                            <img src="{{ user_profile.profile_image.url }}" 
+                                 alt="{{ profile_user.get_full_name }}" 
+                                 class="profile-image">
+                        {% else %}
+                            <div class="profile-placeholder">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Profile Info Column -->
+                <div class="col-md-6">
+                    <h2 class="mb-1 mt-3 fw-bold">{{ profile_user.get_full_name }}</h2>
+                    <p class="text-muted mb-2 h5">@{{ profile_user.username }}</p>
+                    
+                    {% if user_profile.bio %}
+                        <p class="mt-3 mb-3">{{ user_profile.bio }}</p>
+                    {% endif %}
+
+                    <div class="d-flex flex-wrap gap-3 mt-3 mb-3">
+                        {% if user_profile.location %}
+                            <span class="info-item">
+                                <i class="bi bi-geo-alt-fill text-primary"></i>
+                                <span>{{ user_profile.location }}</span>
+                            </span>
+                        {% endif %}
+                        
+                        {% if profile_user.career %}
+                            <span class="info-item">
+                                <i class="bi bi-mortarboard-fill text-primary"></i>
+                                <span>{{ profile_user.get_career_display }}</span>
+                            </span>
+                        {% endif %}
+                        
+                        {% if profile_user.semester %}
+                            <span class="info-item">
+                                <i class="bi bi-bookmark-fill text-primary"></i>
+                                <span>{{ profile_user.semester }}° Semestre</span>
+                            </span>
+                        {% endif %}
+
+                        {% if user_profile.website %}
+                            <span class="info-item">
+                                <i class="bi bi-globe2 text-primary"></i>
+                                <a href="{{ user_profile.website }}" target="_blank" class="text-decoration-none">
+                                    Sitio web
+                                </a>
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Social Links -->
+                    {% if user_profile.facebook_url or user_profile.twitter_url or user_profile.instagram_url or user_profile.linkedin_url or user_profile.github_url %}
+                        <div class="d-flex gap-2 mt-3">
+                            {% if user_profile.facebook_url %}
+                                <a href="{{ user_profile.facebook_url }}" target="_blank" class="social-link" title="Facebook">
+                                    <i class="bi bi-facebook"></i>
+                                </a>
+                            {% endif %}
+                            {% if user_profile.twitter_url %}
+                                <a href="{{ user_profile.twitter_url }}" target="_blank" class="social-link" title="Twitter/X">
+                                    <i class="bi bi-twitter-x"></i>
+                                </a>
+                            {% endif %}
+                            {% if user_profile.instagram_url %}
+                                <a href="{{ user_profile.instagram_url }}" target="_blank" class="social-link" title="Instagram">
+                                    <i class="bi bi-instagram"></i>
+                                </a>
+                            {% endif %}
+                            {% if user_profile.linkedin_url %}
+                                <a href="{{ user_profile.linkedin_url }}" target="_blank" class="social-link" title="LinkedIn">
+                                    <i class="bi bi-linkedin"></i>
+                                </a>
+                            {% endif %}
+                            {% if user_profile.github_url %}
+                                <a href="{{ user_profile.github_url }}" target="_blank" class="social-link" title="GitHub">
+                                    <i class="bi bi-github"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Action Buttons Column -->
+                <div class="col-md-3 text-end mt-3">
+                    {% if is_own_profile %}
+                        <button class="btn btn-primary mb-2 w-100" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="bi bi-pencil-square"></i> Editar Perfil
+                        </button>
+                        <a href="{% url 'profiles:privacy-settings' %}" class="btn btn-outline-secondary mb-2 w-100">
+                            <i class="bi bi-shield-lock"></i> Privacidad
+                        </a>
+                    {% else %}
+                        {% if is_friend %}
+                            <button class="btn btn-success mb-2 w-100" disabled>
+                                <i class="bi bi-check-circle-fill"></i> Amigos
+                            </button>
+                        {% else %}
+                            <button class="btn btn-primary mb-2 w-100">
+                                <i class="bi bi-person-plus-fill"></i> Agregar Amigo
+                            </button>
+                        {% endif %}
+                        <button class="btn btn-outline-primary w-100">
+                            <i class="bi bi-chat-dots-fill"></i> Mensaje
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="row mt-4">
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ user_profile.posts_count }}</div>
+                        <div class="stat-label">Publicaciones</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ user_profile.friends_count }}</div>
+                        <div class="stat-label">Amigos</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ user_profile.followers_count }}</div>
+                        <div class="stat-label">Seguidores</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ user_profile.following_count }}</div>
+                        <div class="stat-label">Siguiendo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-4">
+            <!-- About Card -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-info-circle-fill text-primary"></i> Información
+                    </h5>
+                    
+                    {% if privacy_settings.email_visibility == 'public' or is_own_profile %}
+                        <div class="info-item">
+                            <i class="bi bi-envelope-fill text-primary"></i>
+                            <span>{{ profile_user.email }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if profile_user.phone %}
+                        {% if privacy_settings.phone_visibility == 'public' or is_own_profile %}
+                            <div class="info-item">
+                                <i class="bi bi-telephone-fill text-primary"></i>
+                                <span>{{ profile_user.phone }}</span>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if user_profile.birth_date %}
+                        {% if privacy_settings.birth_date_visibility == 'public' or is_own_profile %}
+                            <div class="info-item">
+                                <i class="bi bi-calendar-event-fill text-primary"></i>
+                                <span>
+                                    {{ user_profile.birth_date|date:"d/m/Y" }}
+                                    {% if user_profile.age %}
+                                        ({{ user_profile.age }} años)
+                                    {% endif %}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if user_profile.gender %}
+                        <div class="info-item">
+                            <i class="bi bi-gender-ambiguous text-primary"></i>
+                            <span>{{ user_profile.get_gender_display }}</span>
+                        </div>
+                    {% endif %}
+
+                    {% if not profile_user.phone and not user_profile.birth_date and not user_profile.gender %}
+                        {% if not privacy_settings.email_visibility == 'public' and not is_own_profile %}
+                            <p class="text-muted text-center my-3">
+                                <i class="bi bi-lock"></i> Información privada
+                            </p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Skills Card -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-stars text-primary"></i> Habilidades
+                        </h5>
+                        {% if is_own_profile %}
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    {% if skills %}
+                        <div class="d-flex flex-wrap">
+                            {% for skill in skills %}
+                                <div class="skill-badge">
+                                    <span>{{ skill.name }}</span>
+                                    <span class="badge bg-primary">{{ skill.get_level_display }}</span>
+                                    {% if is_own_profile %}
+                                        <button class="btn btn-sm btn-link text-danger p-0" 
+                                                onclick="deleteSkill({{ skill.pk }}, '{{ skill.name }}')"
+                                                title="Eliminar">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center my-3">
+                            <i class="bi bi-stars"></i><br>
+                            No hay habilidades registradas
+                        </p>
+                        {% if is_own_profile %}
+                            <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+                                <i class="bi bi-plus-circle"></i> Agregar habilidad
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-8">
+            <!-- Education Card -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-mortarboard-fill text-primary"></i> Educación
+                        </h5>
+                        {% if is_own_profile %}
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addEducationModal">
+                                <i class="bi bi-plus-lg"></i> Agregar
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    {% if education %}
+                        {% for edu in education %}
+                            <div class="experience-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold">{{ edu.institution }}</h6>
+                                        <p class="mb-2">
+                                            <strong>{{ edu.get_degree_display }}</strong>
+                                            {% if edu.field_of_study %} - {{ edu.field_of_study }}{% endif %}
+                                        </p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar3"></i>
+                                            {{ edu.start_date|date:"Y" }} - 
+                                            {% if edu.is_current %}
+                                                <span class="badge bg-success">Actualidad</span>
+                                            {% elif edu.end_date %}
+                                                {{ edu.end_date|date:"Y" }}
+                                            {% endif %}
+                                        </small>
+                                        {% if edu.grade %}
+                                            <p class="mb-1 mt-2">
+                                                <i class="bi bi-award-fill text-warning"></i> {{ edu.grade }}
+                                            </p>
+                                        {% endif %}
+                                        {% if edu.description %}
+                                            <p class="mt-2 mb-0 text-muted">{{ edu.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                    {% if is_own_profile %}
+                                        <div class="ms-2">
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="deleteEducation({{ edu.pk }}, '{{ edu.institution }}')"
+                                                    title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center my-4">
+                            <i class="bi bi-mortarboard" style="font-size: 2rem;"></i><br>
+                            No hay educación registrada
+                        </p>
+                        {% if is_own_profile %}
+                            <button class="btn btn-sm btn-outline-primary d-block mx-auto" data-bs-toggle="modal" data-bs-target="#addEducationModal">
+                                <i class="bi bi-plus-circle"></i> Agregar educación
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Work Experience Card -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-briefcase-fill text-primary"></i> Experiencia Laboral
+                        </h5>
+                        {% if is_own_profile %}
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addWorkModal">
+                                <i class="bi bi-plus-lg"></i> Agregar
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    {% if work_experience %}
+                        {% for work in work_experience %}
+                            <div class="experience-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold">{{ work.position }}</h6>
+                                        <p class="mb-2">
+                                            {{ work.company }}
+                                            {% if work.location %} · {{ work.location }}{% endif %}
+                                        </p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar3"></i>
+                                            {{ work.start_date|date:"M Y" }} - 
+                                            {% if work.is_current %}
+                                                <span class="badge bg-success">Actualidad</span>
+                                            {% elif work.end_date %}
+                                                {{ work.end_date|date:"M Y" }}
+                                            {% endif %}
+                                            · {{ work.get_employment_type_display }}
+                                        </small>
+                                        {% if work.description %}
+                                            <p class="mt-2 mb-0 text-muted">{{ work.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                    {% if is_own_profile %}
+                                        <div class="ms-2">
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="deleteWork({{ work.pk }}, '{{ work.company }}')"
+                                                    title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center my-4">
+                            <i class="bi bi-briefcase" style="font-size: 2rem;"></i><br>
+                            No hay experiencia laboral registrada
+                        </p>
+                        {% if is_own_profile %}
+                            <button class="btn btn-sm btn-outline-primary d-block mx-auto" data-bs-toggle="modal" data-bs-target="#addWorkModal">
+                                <i class="bi bi-plus-circle"></i> Agregar experiencia
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Posts Card -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-file-post-fill text-primary"></i> Publicaciones
+                    </h5>
+                    <div class="text-center py-5">
+                        <i class="bi bi-newspaper text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">
+                            Las publicaciones aparecerán aquí cuando implementemos el módulo de Posts.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if is_own_profile %}
+<!-- Modal: Editar Perfil -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editProfileModalLabel">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Perfil
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data" action="{% url 'profiles:profile-edit' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- Información Básica -->
+                    <div class="form-section-title">
+                        <i class="bi bi-person-badge"></i> Información Básica
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nombre *</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Apellido *</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Teléfono</label>
+                            <input type="text" name="phone" class="form-control" value="{{ user.phone|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Carrera</label>
+                            <select name="career" class="form-select">
+                                <option value="">Seleccionar...</option>
+                                {% for value, label in user.CAREER_CHOICES %}
+                                    <option value="{{ value }}" {% if user.career == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Semestre</label>
+                            <input type="number" name="semester" class="form-control" value="{{ user.semester|default:'' }}" min="1" max="10">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Código de Estudiante</label>
+                            <input type="text" name="student_id" class="form-control" value="{{ user.student_id|default:'' }}">
+                        </div>
+                    </div>
+
+                    <!-- Sobre Ti -->
+                    <div class="form-section-title">
+                        <i class="bi bi-chat-left-quote"></i> Sobre Ti
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Biografía</label>
+                        <textarea name="bio" class="form-control" rows="3" maxlength="500" placeholder="Cuéntanos algo sobre ti...">{{ user_profile.bio }}</textarea>
+                        <small class="text-muted">Máximo 500 caracteres</small>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Fecha de Nacimiento</label>
+                            <input type="date" name="birth_date" class="form-control" value="{{ user_profile.birth_date|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Género</label>
+                            <select name="gender" class="form-select">
+                                <option value="">Seleccionar...</option>
+                                <option value="male" {% if user_profile.gender == 'male' %}selected{% endif %}>Masculino</option>
+                                <option value="female" {% if user_profile.gender == 'female' %}selected{% endif %}>Femenino</option>
+                                <option value="other" {% if user_profile.gender == 'other' %}selected{% endif %}>Otro</option>
+                                <option value="prefer_not_to_say" {% if user_profile.gender == 'prefer_not_to_say' %}selected{% endif %}>Prefiero no decir</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Ubicación</label>
+                            <input type="text" name="location" class="form-control" value="{{ user_profile.location }}" placeholder="Ciudad, País">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sitio Web</label>
+                        <input type="url" name="website" class="form-control" value="{{ user_profile.website }}" placeholder="https://tusitio.com">
+                    </div>
+
+                    <!-- Imágenes -->
+                    <div class="form-section-title">
+                        <i class="bi bi-images"></i> Imágenes de Perfil
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Foto de Perfil</label>
+                            {% if user_profile.profile_image %}
+                                <div class="mb-2">
+                                    <img src="{{ user_profile.profile_image.url }}" alt="Preview" class="img-thumbnail" style="max-height: 120px;">
+                                </div>
+                            {% endif %}
+                            <input type="file" name="profile_image" class="form-control" accept="image/*">
+                            <small class="text-muted">Recomendado: 500x500px, formato cuadrado</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Foto de Portada</label>
+                            {% if user_profile.cover_image %}
+                                <div class="mb-2">
+                                    <img src="{{ user_profile.cover_image.url }}" alt="Preview" class="img-thumbnail" style="max-height: 120px;">
+                                </div>
+                            {% endif %}
+                            <input type="file" name="cover_image" class="form-control" accept="image/*">
+                            <small class="text-muted">Recomendado: 1500x500px, formato horizontal</small>
+                        </div>
+                    </div>
+
+                    <!-- Redes Sociales -->
+                    <div class="form-section-title">
+                        <i class="bi bi-share"></i> Redes Sociales
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-facebook text-primary"></i> Facebook
+                        </label>
+                        <input type="url" name="facebook_url" class="form-control" value="{{ user_profile.facebook_url }}" placeholder="https://facebook.com/tu-perfil">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-twitter-x"></i> Twitter/X
+                        </label>
+                        <input type="url" name="twitter_url" class="form-control" value="{{ user_profile.twitter_url }}" placeholder="https://twitter.com/tu-usuario">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-instagram text-danger"></i> Instagram
+                        </label>
+                        <input type="url" name="instagram_url" class="form-control" value="{{ user_profile.instagram_url }}" placeholder="https://instagram.com/tu-usuario">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-linkedin text-primary"></i> LinkedIn
+                        </label>
+                        <input type="url" name="linkedin_url" class="form-control" value="{{ user_profile.linkedin_url }}" placeholder="https://linkedin.com/in/tu-perfil">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-github"></i> GitHub
+                        </label>
+                        <input type="url" name="github_url" class="form-control" value="{{ user_profile.github_url }}" placeholder="https://github.com/tu-usuario">
+                    </div>
+
+                    <!-- Configuración de Privacidad -->
+                    <div class="form-section-title">
+                        <i class="bi bi-shield-check"></i> Configuración Rápida de Privacidad
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="is_profile_public" id="is_profile_public" {% if user_profile.is_profile_public %}checked{% endif %}>
+                        <label class="form-check-label" for="is_profile_public">
+                            Hacer mi perfil público
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="show_email" id="show_email" {% if user_profile.show_email %}checked{% endif %}>
+                        <label class="form-check-label" for="show_email">
+                            Mostrar mi email en el perfil
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="show_phone" id="show_phone" {% if user_profile.show_phone %}checked{% endif %}>
+                        <label class="form-check-label" for="show_phone">
+                            Mostrar mi teléfono en el perfil
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Agregar Habilidad -->
+<div class="modal fade" id="addSkillModal" tabindex="-1" aria-labelledby="addSkillModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addSkillModalLabel">
+                    <i class="bi bi-plus-circle me-2"></i>Agregar Habilidad
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form method="post" action="{% url 'profiles:skill-add' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Habilidad *</label>
+                        <input type="text" name="name" class="form-control" placeholder="Ejemplo: Python, Photoshop, Marketing Digital" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nivel *</label>
+                        <select name="level" class="form-select" required>
+                            <option value="beginner">Principiante</option>
+                            <option value="intermediate" selected>Intermedio</option>
+                            <option value="advanced">Avanzado</option>
+                            <option value="expert">Experto</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Años de Experiencia</label>
+                        <input type="number" name="years_of_experience" class="form-control" min="0" max="50" placeholder="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Agregar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Agregar Educación -->
+<div class="modal fade" id="addEducationModal" tabindex="-1" aria-labelledby="addEducationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addEducationModalLabel">
+                    <i class="bi bi-mortarboard me-2"></i>Agregar Educación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form method="post" action="{% url 'profiles:education-add' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Institución *</label>
+                            <input type="text" name="institution" class="form-control" placeholder="Nombre de la institución" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Título *</label>
+                            <select name="degree" class="form-select" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="high_school">Bachillerato</option>
+                                <option value="technical">Técnico</option>
+                                <option value="technology">Tecnología</option>
+                                <option value="bachelor">Pregrado/Licenciatura</option>
+                                <option value="master">Maestría</option>
+                                <option value="phd">Doctorado</option>
+                                <option value="certificate">Certificación</option>
+                                <option value="diploma">Diplomado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Campo de Estudio</label>
+                        <input type="text" name="field_of_study" class="form-control" placeholder="Ejemplo: Ingeniería de Sistemas">
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Fecha de Inicio *</label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Fecha de Finalización</label>
+                            <input type="date" name="end_date" class="form-control" id="education_end_date">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_current" id="education_is_current">
+                                <label class="form-check-label" for="education_is_current">
+                                    Actualmente estudio aquí
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Calificación</label>
+                        <input type="text" name="grade" class="form-control" placeholder="Ejemplo: 9.5/10, Sobresaliente">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Descripción</label>
+                        <textarea name="description" class="form-control" rows="3" maxlength="500" placeholder="Actividades, logros, proyectos destacados..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Agregar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Agregar Experiencia Laboral -->
+<div class="modal fade" id="addWorkModal" tabindex="-1" aria-labelledby="addWorkModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addWorkModalLabel">
+                    <i class="bi bi-briefcase me-2"></i>Agregar Experiencia Laboral
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form method="post" action="{% url 'profiles:work-add' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Empresa *</label>
+                            <input type="text" name="company" class="form-control" placeholder="Nombre de la empresa" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Cargo *</label>
+                            <input type="text" name="position" class="form-control" placeholder="Tu cargo" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Tipo de Empleo *</label>
+                            <select name="employment_type" class="form-select" required>
+                                <option value="full_time">Tiempo completo</option>
+                                <option value="part_time">Medio tiempo</option>
+                                <option value="freelance">Freelance</option>
+                                <option value="internship">Pasantía</option>
+                                <option value="contract">Contrato</option>
+                                <option value="volunteer">Voluntariado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ubicación</label>
+                            <input type="text" name="location" class="form-control" placeholder="Ciudad, País o Remoto">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Fecha de Inicio *</label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Fecha de Finalización</label>
+                            <input type="date" name="end_date" class="form-control" id="work_end_date">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_current" id="work_is_current">
+                                <label class="form-check-label" for="work_is_current">
+                                    Trabajo actualmente aquí
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Descripción</label>
+                        <textarea name="description" class="form-control" rows="4" maxlength="1000" placeholder="Responsabilidades, logros, proyectos destacados..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Agregar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Form para eliminar (oculto) -->
+<form id="deleteForm" method="post" style="display: none;">
+    {% csrf_token %}
+</form>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Deshabilitar fecha final si marca "actual"
+document.getElementById('education_is_current')?.addEventListener('change', function() {
+    const endDateField = document.getElementById('education_end_date');
+    endDateField.disabled = this.checked;
+    if (this.checked) endDateField.value = '';
+});
+
+document.getElementById('work_is_current')?.addEventListener('change', function() {
+    const endDateField = document.getElementById('work_end_date');
+    endDateField.disabled = this.checked;
+    if (this.checked) endDateField.value = '';
+});
+
+// Funciones para eliminar con confirmación
+function deleteSkill(id, name) {
+    if (confirm(`¿Estás seguro de eliminar la habilidad "${name}"?`)) {
+        const form = document.getElementById('deleteForm');
+        form.action = `/profiles/skills/${id}/delete/`;
+        form.submit();
+    }
+}
+
+function deleteEducation(id, institution) {
+    if (confirm(`¿Estás seguro de eliminar la educación en "${institution}"?`)) {
+        const form = document.getElementById('deleteForm');
+        form.action = `/profiles/education/${id}/delete/`;
+        form.submit();
+    }
+}
+
+function deleteWork(id, company) {
+    if (confirm(`¿Estás seguro de eliminar la experiencia en "${company}"?`)) {
+        const form = document.getElementById('deleteForm');
+        form.action = `/profiles/work/${id}/delete/`;
+        form.submit();
+    }
+}
+
+// Cerrar modal automáticamente después de submit exitoso si hay un mensaje de éxito
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            // Cerrar todos los modales abiertos
+            const modals = document.querySelectorAll('.modal.show');
+            modals.forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            });
+        {% endif %}
+    {% endfor %}
+{% endif %}
+</script>
+{% endblock %}

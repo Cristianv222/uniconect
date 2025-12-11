@@ -1,20 +1,33 @@
+# apps/profiles/urls.py
+"""
+URLs para el módulo de perfiles
+"""
 from django.urls import path
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from apps.authentication.models import User
+from . import views
 
 app_name = 'profiles'
 
-@login_required
-def detail_view(request, username):
-    user = User.objects.get(username=username)
-    return render(request, 'profiles/detail.html', {'profile_user': user})
-
-@login_required
-def edit_view(request):
-    return render(request, 'profiles/edit.html', {'user': request.user})
-
 urlpatterns = [
-    path('<str:username>/', detail_view, name='detail'),
-    path('edit/', edit_view, name='edit'),
+    # Perfil principal
+    path('<str:username>/', views.profile_view, name='profile'),
+    path('edit/profile/', views.profile_edit, name='profile-edit'),
+    path('settings/privacy/', views.privacy_settings_view, name='privacy-settings'),
+    
+    # Habilidades (Skills)
+    path('skills/add/', views.skill_add, name='skill-add'),
+    path('skills/<int:pk>/edit/', views.skill_edit, name='skill-edit'),
+    path('skills/<int:pk>/delete/', views.skill_delete, name='skill-delete'),
+    
+    # Educación
+    path('education/add/', views.education_add, name='education-add'),
+    path('education/<int:pk>/edit/', views.education_edit, name='education-edit'),
+    path('education/<int:pk>/delete/', views.education_delete, name='education-delete'),
+    
+    # Experiencia laboral
+    path('work/add/', views.work_add, name='work-add'),
+    path('work/<int:pk>/edit/', views.work_edit, name='work-edit'),
+    path('work/<int:pk>/delete/', views.work_delete, name='work-delete'),
+    
+    # Búsqueda
+    path('search/users/', views.search_users, name='search-users'),
 ]
