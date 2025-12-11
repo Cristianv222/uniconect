@@ -1,0 +1,456 @@
+﻿{% extends 'components/base_authenticated.html' %}
+{% load static %}
+
+{% block title %}Buscar Amigos - UnicoNet{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* User Card Styles */
+    .user-card {
+        transition: all 0.2s;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .user-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    
+    .user-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .user-avatar-placeholder i {
+        font-size: 2.5rem;
+        color: #adb5bd;
+    }
+    
+    /* Sidebar Navigation */
+    .sidebar-nav .list-group-item {
+        border: none;
+        border-left: 3px solid transparent;
+        background: transparent;
+        transition: all 0.3s;
+    }
+    
+    .sidebar-nav .list-group-item:hover {
+        background-color: #f8f9fa;
+        border-left-color: #cbd5e1;
+    }
+    
+    .sidebar-nav .list-group-item.active {
+        background-color: #f8f9fa;
+        border-left-color: #1e40af;
+        font-weight: 600;
+    }
+    
+    .sidebar-nav .list-group-item a {
+        color: #495057;
+        text-decoration: none;
+        display: flex;
+        justify-content-between;
+        align-items: center;
+    }
+    
+    .sidebar-nav .list-group-item.active a {
+        color: #1e40af;
+    }
+    
+    /* Search Box */
+    .search-box {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        transition: border-color 0.3s;
+    }
+    
+    .search-box:focus {
+        border-color: #1e40af;
+        box-shadow: 0 0 0 0.2rem rgba(30, 64, 175, 0.15);
+    }
+    
+    /* Cards */
+    .card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: white;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: #1e40af;
+        border-color: #1e40af;
+    }
+    
+    .btn-primary:hover {
+        background: #1e3a8a;
+        border-color: #1e3a8a;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h5 {
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        color: #94a3b8;
+    }
+    
+    /* Mutual Friends Badge */
+    .mutual-badge {
+        background: #e7f5ff;
+        color: #1e40af;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-people-fill text-primary"></i> Amigos
+                    </h5>
+                    <ul class="list-group list-group-flush sidebar-nav">
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friends_list' %}">
+                                <span><i class="bi bi-people"></i> Mis Amigos</span>
+                                <span class="badge bg-primary rounded-pill">{{ user.profile.friends_count }}</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friend_requests' %}">
+                                <span><i class="bi bi-person-plus"></i> Solicitudes</span>
+                                {% if pending_friend_requests_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">
+                                        {{ pending_friend_requests_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friend_suggestions' %}">
+                                <span><i class="bi bi-stars"></i> Sugerencias</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item active">
+                            <a href="{% url 'friends:find_friends' %}">
+                                <span><i class="bi bi-search"></i> Buscar Amigos</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:blocked_users' %}">
+                                <span class="text-danger"><i class="bi bi-ban"></i> Bloqueados</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h4 class="mb-0">
+                        <i class="bi bi-search text-primary"></i>
+                        Buscar Amigos
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Search Form -->
+                    <form method="get" class="mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
+                                    <input type="text" 
+                                           name="query" 
+                                           class="form-control search-box border-start-0" 
+                                           placeholder="Buscar por nombre o username..." 
+                                           value="{{ form.query.value|default:'' }}"
+                                           style="border-left: none;">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select name="filter_by" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="career" {% if form.filter_by.value == 'career' %}selected{% endif %}>Misma carrera</option>
+                                    <option value="semester" {% if form.filter_by.value == 'semester' %}selected{% endif %}>Mismo semestre</option>
+                                    <option value="mutual_friends" {% if form.filter_by.value == 'mutual_friends' %}selected{% endif %}>Amigos en comÃºn</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                                <a href="{% url 'friends:find_friends' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg"></i> Limpiar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Results -->
+                    {% if users %}
+                        <p class="text-muted mb-3">
+                            <i class="bi bi-person-fill"></i> 
+                            Se encontraron {{ users|length }} resultado{{ users|length|pluralize }}
+                        </p>
+                        
+                        <div class="row g-3">
+                            {% for found_user in users %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card user-card">
+                                        <div class="card-body text-center">
+                                            <!-- Avatar -->
+                                            {% if found_user.profile.profile_image %}
+                                                <img src="{{ found_user.profile.profile_image.url }}" 
+                                                     alt="{{ found_user.get_full_name }}" 
+                                                     class="user-avatar mb-3">
+                                            {% else %}
+                                                <div class="user-avatar-placeholder mb-3 mx-auto">
+                                                    <i class="bi bi-person-fill"></i>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <!-- Name & Username -->
+                                            <h6 class="mb-1 fw-bold">{{ found_user.get_full_name }}</h6>
+                                            <p class="text-muted small mb-2">@{{ found_user.username }}</p>
+                                            
+                                            <!-- Info -->
+                                            {% if found_user.career %}
+                                                <p class="small text-muted mb-2">
+                                                    <i class="bi bi-mortarboard"></i> {{ found_user.get_career_display }}
+                                                </p>
+                                            {% endif %}
+                                            
+                                            {% if found_user.semester %}
+                                                <p class="small text-muted mb-2">
+                                                    <i class="bi bi-bookmark"></i> {{ found_user.semester }}Â° Semestre
+                                                </p>
+                                            {% endif %}
+                                            
+                                            <!-- Mutual Friends (if available) -->
+                                            {% comment %}
+                                            {% if found_user.mutual_friends_count > 0 %}
+                                                <p class="mutual-badge mb-3">
+                                                    <i class="bi bi-people"></i> {{ found_user.mutual_friends_count }} amigo{{ found_user.mutual_friends_count|pluralize }} en comÃºn
+                                                </p>
+                                            {% endif %}
+                                            {% endcomment %}
+                                            
+                                            <!-- Actions -->
+                                            <div class="d-grid gap-2 mt-3">
+                                                {% if found_user.has_pending_request %}
+                                                    <button class="btn btn-sm btn-secondary" disabled>
+                                                        <i class="bi bi-clock"></i> Solicitud Pendiente
+                                                    </button>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-primary" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#sendRequestModal"
+                                                            data-username="{{ found_user.username }}"
+                                                            data-fullname="{{ found_user.get_full_name }}">
+                                                        <i class="bi bi-person-plus-fill"></i> Enviar Solicitud
+                                                    </button>
+                                                {% endif %}
+                                                
+                                                <a href="{% url 'profiles:profile' found_user.username %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> Ver Perfil
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if users.has_other_pages %}
+                            <nav aria-label="PaginaciÃ³n" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if users.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ users.previous_page_number }}&query={{ form.query.value|default:'' }}&filter_by={{ form.filter_by.value|default:'' }}">
+                                                <i class="bi bi-chevron-left"></i> Anterior
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in users.paginator.page_range %}
+                                        {% if users.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}&query={{ form.query.value|default:'' }}&filter_by={{ form.filter_by.value|default:'' }}">
+                                                    {{ num }}
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if users.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ users.next_page_number }}&query={{ form.query.value|default:'' }}&filter_by={{ form.filter_by.value|default:'' }}">
+                                                Siguiente <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% elif form.is_bound %}
+                        <div class="empty-state">
+                            <i class="bi bi-search"></i>
+                            <h5>No se encontraron resultados</h5>
+                            <p>Intenta con otros tÃ©rminos de bÃºsqueda</p>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-search"></i>
+                            <h5>Busca personas para conectar</h5>
+                            <p>Usa el buscador para encontrar amigos</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Enviar Solicitud -->
+<div class="modal fade" id="sendRequestModal" tabindex="-1" aria-labelledby="sendRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="sendRequestModalLabel">
+                    <i class="bi bi-person-plus me-2"></i>Enviar Solicitud de Amistad
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="sendRequestForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-person-plus-fill text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-center mb-3">
+                        Enviar solicitud de amistad a <strong id="sendRequestFullName"></strong>
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mensaje (opcional)</label>
+                        <textarea name="message" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  maxlength="200" 
+                                  placeholder="Escribe un mensaje de presentaciÃ³n..."></textarea>
+                        <small class="text-muted">MÃ¡ximo 200 caracteres</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>Enviar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Send Request Modal
+    const sendRequestModal = document.getElementById('sendRequestModal');
+    if (sendRequestModal) {
+        sendRequestModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const username = button.getAttribute('data-username');
+            const fullName = button.getAttribute('data-fullname');
+            
+            document.getElementById('sendRequestFullName').textContent = fullName;
+            document.getElementById('sendRequestForm').action = `/friends/send/${username}/`;
+        });
+    }
+});
+
+// Auto-close modals on success
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            const modals = document.querySelectorAll('.modal.show');
+            modals.forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            });
+        {% endif %}
+    {% endfor %}
+{% endif %}
+</script>
+{% endblock %}

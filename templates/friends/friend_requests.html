@@ -1,0 +1,519 @@
+﻿{% extends 'components/base_authenticated.html' %}
+{% load static %}
+
+{% block title %}Solicitudes de Amistad - UnicoNet{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Request Card Styles */
+    .request-card {
+        transition: all 0.2s;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 16px;
+    }
+    
+    .request-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .request-avatar {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    
+    .request-avatar-placeholder {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .request-avatar-placeholder i {
+        font-size: 2rem;
+        color: #adb5bd;
+    }
+    
+    /* Sidebar Navigation */
+    .sidebar-nav .list-group-item {
+        border: none;
+        border-left: 3px solid transparent;
+        background: transparent;
+        transition: all 0.3s;
+    }
+    
+    .sidebar-nav .list-group-item:hover {
+        background-color: #f8f9fa;
+        border-left-color: #cbd5e1;
+    }
+    
+    .sidebar-nav .list-group-item.active {
+        background-color: #f8f9fa;
+        border-left-color: #1e40af;
+        font-weight: 600;
+    }
+    
+    .sidebar-nav .list-group-item a {
+        color: #495057;
+        text-decoration: none;
+        display: flex;
+        justify-content-between;
+        align-items: center;
+    }
+    
+    .sidebar-nav .list-group-item.active a {
+        color: #1e40af;
+    }
+    
+    /* Cards */
+    .card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: white;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: #1e40af;
+        border-color: #1e40af;
+    }
+    
+    .btn-primary:hover {
+        background: #1e3a8a;
+        border-color: #1e3a8a;
+    }
+    
+    /* Time Badge */
+    .time-badge {
+        background: #f1f5f9;
+        color: #64748b;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h5 {
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        color: #94a3b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-people-fill text-primary"></i> Amigos
+                    </h5>
+                    <ul class="list-group list-group-flush sidebar-nav">
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friends_list' %}">
+                                <span><i class="bi bi-people"></i> Mis Amigos</span>
+                                <span class="badge bg-primary rounded-pill">{{ user.profile.friends_count }}</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item active">
+                            <a href="{% url 'friends:friend_requests' %}">
+                                <span><i class="bi bi-person-plus"></i> Solicitudes</span>
+                                {% if received_requests.count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">{{ received_requests.count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friend_suggestions' %}">
+                                <span><i class="bi bi-stars"></i> Sugerencias</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:find_friends' %}">
+                                <span><i class="bi bi-search"></i> Buscar Amigos</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:blocked_users' %}">
+                                <span class="text-danger"><i class="bi bi-ban"></i> Bloqueados</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Solicitudes Recibidas -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-inbox-fill text-primary"></i>
+                        Solicitudes Recibidas
+                        {% if received_requests.count > 0 %}
+                            <span class="badge bg-danger rounded-pill ms-2">{{ received_requests.count }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    {% if received_requests %}
+                        {% for request in received_requests %}
+                            <div class="request-card">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <!-- Avatar -->
+                                        <div class="col-auto">
+                                            {% if request.from_user.profile.profile_image %}
+                                                <img src="{{ request.from_user.profile.profile_image.url }}" 
+                                                     alt="{{ request.from_user.get_full_name }}" 
+                                                     class="request-avatar">
+                                            {% else %}
+                                                <div class="request-avatar-placeholder">
+                                                    <i class="bi bi-person-fill"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Info -->
+                                        <div class="col">
+                                            <h6 class="mb-1 fw-bold">{{ request.from_user.get_full_name }}</h6>
+                                            <p class="text-muted small mb-2">@{{ request.from_user.username }}</p>
+                                            
+                                            {% if request.from_user.career %}
+                                                <p class="small text-muted mb-1">
+                                                    <i class="bi bi-mortarboard"></i> {{ request.from_user.get_career_display }}
+                                                </p>
+                                            {% endif %}
+                                            
+                                            {% if request.message %}
+                                                <p class="small mb-2 p-2 bg-light rounded">
+                                                    <i class="bi bi-chat-quote text-primary"></i> "{{ request.message }}"
+                                                </p>
+                                            {% endif %}
+                                            
+                                            <span class="time-badge">
+                                                <i class="bi bi-clock"></i> {{ request.created_at|timesince }} atrÃ¡s
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="col-auto">
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-success btn-sm" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#acceptRequestModal"
+                                                        data-request-id="{{ request.id }}"
+                                                        data-fullname="{{ request.from_user.get_full_name }}">
+                                                    <i class="bi bi-check-circle"></i> Aceptar
+                                                </button>
+                                                <button class="btn btn-outline-danger btn-sm" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#rejectRequestModal"
+                                                        data-request-id="{{ request.id }}"
+                                                        data-fullname="{{ request.from_user.get_full_name }}">
+                                                    <i class="bi bi-x-circle"></i> Rechazar
+                                                </button>
+                                            </div>
+                                            <a href="{% url 'profiles:profile' request.from_user.username %}" 
+                                               class="btn btn-sm btn-link text-decoration-none d-block text-center mt-2">
+                                                Ver perfil
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h5>No tienes solicitudes pendientes</h5>
+                            <p>Las solicitudes de amistad aparecerÃ¡n aquÃ­</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Solicitudes Enviadas -->
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-send-fill text-info"></i>
+                        Solicitudes Enviadas
+                        {% if sent_requests.count > 0 %}
+                            <span class="badge bg-info rounded-pill ms-2">{{ sent_requests.count }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    {% if sent_requests %}
+                        {% for request in sent_requests %}
+                            <div class="request-card">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <!-- Avatar -->
+                                        <div class="col-auto">
+                                            {% if request.to_user.profile.profile_image %}
+                                                <img src="{{ request.to_user.profile.profile_image.url }}" 
+                                                     alt="{{ request.to_user.get_full_name }}" 
+                                                     class="request-avatar">
+                                            {% else %}
+                                                <div class="request-avatar-placeholder">
+                                                    <i class="bi bi-person-fill"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Info -->
+                                        <div class="col">
+                                            <h6 class="mb-1 fw-bold">{{ request.to_user.get_full_name }}</h6>
+                                            <p class="text-muted small mb-2">@{{ request.to_user.username }}</p>
+                                            
+                                            {% if request.viewed_at %}
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-eye"></i> Visto
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-hourglass-split"></i> Pendiente
+                                                </span>
+                                            {% endif %}
+                                            
+                                            <span class="time-badge ms-2">
+                                                <i class="bi bi-clock"></i> {{ request.created_at|timesince }} atrÃ¡s
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="col-auto">
+                                            <button class="btn btn-outline-secondary btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#cancelRequestModal"
+                                                    data-request-id="{{ request.id }}"
+                                                    data-fullname="{{ request.to_user.get_full_name }}">
+                                                <i class="bi bi-x-circle"></i> Cancelar
+                                            </button>
+                                            <a href="{% url 'profiles:profile' request.to_user.username %}" 
+                                               class="btn btn-sm btn-link text-decoration-none d-block text-center mt-2">
+                                                Ver perfil
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-send"></i>
+                            <h5>No has enviado solicitudes</h5>
+                            <p>Busca personas para conectar</p>
+                            <a href="{% url 'friends:find_friends' %}" class="btn btn-primary mt-3">
+                                <i class="bi bi-search"></i> Buscar Amigos
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Aceptar Solicitud -->
+<div class="modal fade" id="acceptRequestModal" tabindex="-1" aria-labelledby="acceptRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="acceptRequestModalLabel">
+                    <i class="bi bi-check-circle me-2"></i>Aceptar Solicitud
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="acceptRequestForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-person-check text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-center mb-0">
+                        Â¿Deseas aceptar la solicitud de amistad de <strong id="acceptFullName"></strong>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i>Aceptar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Rechazar Solicitud -->
+<div class="modal fade" id="rejectRequestModal" tabindex="-1" aria-labelledby="rejectRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="rejectRequestModalLabel">
+                    <i class="bi bi-x-circle me-2"></i>Rechazar Solicitud
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="rejectRequestForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-x-octagon text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-center mb-0">
+                        Â¿EstÃ¡s seguro de rechazar la solicitud de <strong id="rejectFullName"></strong>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-arrow-left me-1"></i>Volver
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-1"></i>Rechazar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Cancelar Solicitud -->
+<div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title" id="cancelRequestModalLabel">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar Solicitud
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="cancelRequestForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="text-center mb-0">
+                        Â¿Deseas cancelar la solicitud enviada a <strong id="cancelFullName"></strong>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-arrow-left me-1"></i>Volver
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Accept Request Modal
+    const acceptModal = document.getElementById('acceptRequestModal');
+    if (acceptModal) {
+        acceptModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const requestId = button.getAttribute('data-request-id');
+            const fullName = button.getAttribute('data-fullname');
+            
+            document.getElementById('acceptFullName').textContent = fullName;
+            document.getElementById('acceptRequestForm').action = `/friends/accept/${requestId}/`;
+        });
+    }
+    
+    // Reject Request Modal
+    const rejectModal = document.getElementById('rejectRequestModal');
+    if (rejectModal) {
+        rejectModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const requestId = button.getAttribute('data-request-id');
+            const fullName = button.getAttribute('data-fullname');
+            
+            document.getElementById('rejectFullName').textContent = fullName;
+            document.getElementById('rejectRequestForm').action = `/friends/reject/${requestId}/`;
+        });
+    }
+    
+    // Cancel Request Modal
+    const cancelModal = document.getElementById('cancelRequestModal');
+    if (cancelModal) {
+        cancelModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const requestId = button.getAttribute('data-request-id');
+            const fullName = button.getAttribute('data-fullname');
+            
+            document.getElementById('cancelFullName').textContent = fullName;
+            document.getElementById('cancelRequestForm').action = `/friends/cancel/${requestId}/`;
+        });
+    }
+});
+
+// Auto-close modals on success
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            const modals = document.querySelectorAll('.modal.show');
+            modals.forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            });
+        {% endif %}
+    {% endfor %}
+{% endif %}
+</script>
+{% endblock %}

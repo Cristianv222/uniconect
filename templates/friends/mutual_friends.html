@@ -1,0 +1,208 @@
+﻿{% extends 'components/base_authenticated.html' %}
+{% load static %}
+
+{% block title %}Amigos en ComÃºn con {{ other_user.get_full_name }} - UnicoNet{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Friend Card Styles */
+    .friend-card {
+        transition: all 0.2s;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .friend-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .friend-avatar {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    
+    .friend-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .friend-avatar-placeholder i {
+        font-size: 2.5rem;
+        color: #adb5bd;
+    }
+    
+    /* Cards */
+    .card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: white;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: #1e40af;
+        border-color: #1e40af;
+    }
+    
+    .btn-primary:hover {
+        background: #1e3a8a;
+        border-color: #1e3a8a;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h5 {
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        color: #94a3b8;
+    }
+    
+    /* User Header */
+    .user-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+    }
+    
+    .user-header-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 4px solid white;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- User Header -->
+    <div class="user-header shadow-sm">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                {% if other_user.profile.profile_image %}
+                    <img src="{{ other_user.profile.profile_image.url }}" 
+                         alt="{{ other_user.get_full_name }}" 
+                         class="user-header-avatar">
+                {% else %}
+                    <div class="user-header-avatar d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.2);">
+                        <i class="bi bi-person-fill" style="font-size: 2.5rem;"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                <h3 class="mb-1">Amigos en ComÃºn</h3>
+                <p class="mb-0 opacity-75">
+                    Con <strong>{{ other_user.get_full_name }}</strong> (@{{ other_user.username }})
+                </p>
+            </div>
+            <div class="col-auto">
+                <a href="{% url 'profiles:profile' other_user.username %}" class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> Volver al Perfil
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mutual Friends -->
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center py-3">
+            <h5 class="mb-0">
+                <i class="bi bi-people-fill text-primary"></i>
+                {{ count }} Amigo{{ count|pluralize }} en ComÃºn
+            </h5>
+        </div>
+        
+        <div class="card-body">
+            {% if mutual_friends %}
+                <div class="row g-3">
+                    {% for friend in mutual_friends %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card friend-card">
+                                <div class="card-body text-center">
+                                    <!-- Avatar -->
+                                    {% if friend.profile.profile_image %}
+                                        <img src="{{ friend.profile.profile_image.url }}" 
+                                             alt="{{ friend.get_full_name }}" 
+                                             class="friend-avatar mb-3">
+                                    {% else %}
+                                        <div class="friend-avatar-placeholder mb-3 mx-auto">
+                                            <i class="bi bi-person-fill"></i>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- Name & Username -->
+                                    <h6 class="mb-1 fw-bold">{{ friend.get_full_name }}</h6>
+                                    <p class="text-muted small mb-2">@{{ friend.username }}</p>
+                                    
+                                    <!-- Info -->
+                                    {% if friend.career %}
+                                        <p class="small text-muted mb-3">
+                                            <i class="bi bi-mortarboard"></i> {{ friend.get_career_display }}
+                                        </p>
+                                    {% endif %}
+                                    
+                                    <!-- Action -->
+                                    <a href="{% url 'profiles:profile' friend.username %}" 
+                                       class="btn btn-sm btn-outline-primary w-100">
+                                        <i class="bi bi-eye"></i> Ver Perfil
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-people"></i>
+                    <h5>No tienen amigos en comÃºn</h5>
+                    <p>TodavÃ­a no comparten conexiones mutuas</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

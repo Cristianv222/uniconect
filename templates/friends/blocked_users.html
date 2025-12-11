@@ -1,0 +1,346 @@
+﻿{% extends 'components/base_authenticated.html' %}
+{% load static %}
+
+{% block title %}Usuarios Bloqueados - UnicoNet{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Blocked User Card Styles */
+    .blocked-card {
+        transition: all 0.2s;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 16px;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .blocked-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .blocked-avatar {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 50%;
+        filter: grayscale(100%);
+    }
+    
+    .blocked-avatar-placeholder {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        filter: grayscale(100%);
+    }
+    
+    .blocked-avatar-placeholder i {
+        font-size: 2rem;
+        color: #adb5bd;
+    }
+    
+    /* Sidebar Navigation */
+    .sidebar-nav .list-group-item {
+        border: none;
+        border-left: 3px solid transparent;
+        background: transparent;
+        transition: all 0.3s;
+    }
+    
+    .sidebar-nav .list-group-item:hover {
+        background-color: #f8f9fa;
+        border-left-color: #cbd5e1;
+    }
+    
+    .sidebar-nav .list-group-item.active {
+        background-color: #f8f9fa;
+        border-left-color: #1e40af;
+        font-weight: 600;
+    }
+    
+    .sidebar-nav .list-group-item a {
+        color: #495057;
+        text-decoration: none;
+        display: flex;
+        justify-content-between;
+        align-items: center;
+    }
+    
+    .sidebar-nav .list-group-item.active a {
+        color: #1e40af;
+    }
+    
+    /* Cards */
+    .card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: white;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: #1e40af;
+        border-color: #1e40af;
+    }
+    
+    .btn-primary:hover {
+        background: #1e3a8a;
+        border-color: #1e3a8a;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h5 {
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        color: #94a3b8;
+    }
+    
+    /* Blocked Badge */
+    .blocked-badge {
+        background: #fee;
+        color: #dc3545;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-people-fill text-primary"></i> Amigos
+                    </h5>
+                    <ul class="list-group list-group-flush sidebar-nav">
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friends_list' %}">
+                                <span><i class="bi bi-people"></i> Mis Amigos</span>
+                                <span class="badge bg-primary rounded-pill">{{ user.profile.friends_count }}</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friend_requests' %}">
+                                <span><i class="bi bi-person-plus"></i> Solicitudes</span>
+                                {% if pending_friend_requests_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">
+                                        {{ pending_friend_requests_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friend_suggestions' %}">
+                                <span><i class="bi bi-stars"></i> Sugerencias</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:find_friends' %}">
+                                <span><i class="bi bi-search"></i> Buscar Amigos</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item active">
+                            <a href="{% url 'friends:blocked_users' %}">
+                                <span class="text-danger"><i class="bi bi-ban"></i> Bloqueados</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h4 class="mb-0">
+                        <i class="bi bi-ban text-danger"></i>
+                        Usuarios Bloqueados
+                        {% if blocked_users.count > 0 %}
+                            <span class="text-muted">({{ blocked_users.count }})</span>
+                        {% endif %}
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    {% if blocked_users %}
+                        <div class="alert alert-warning" role="alert">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Nota:</strong> Los usuarios bloqueados no pueden enviarte mensajes ni ver tu perfil.
+                        </div>
+                        
+                        {% for blocked in blocked_users %}
+                            <div class="blocked-card">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <!-- Avatar -->
+                                        <div class="col-auto">
+                                            {% if blocked.blocked.profile.profile_image %}
+                                                <img src="{{ blocked.blocked.profile.profile_image.url }}" 
+                                                     alt="{{ blocked.blocked.get_full_name }}" 
+                                                     class="blocked-avatar">
+                                            {% else %}
+                                                <div class="blocked-avatar-placeholder">
+                                                    <i class="bi bi-person-fill"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Info -->
+                                        <div class="col">
+                                            <h6 class="mb-1 fw-bold">{{ blocked.blocked.get_full_name }}</h6>
+                                            <p class="text-muted small mb-2">@{{ blocked.blocked.username }}</p>
+                                            
+                                            <span class="blocked-badge">
+                                                <i class="bi bi-ban"></i> Bloqueado
+                                            </span>
+                                            
+                                            {% if blocked.reason %}
+                                                <span class="badge bg-secondary ms-2">
+                                                    {{ blocked.get_reason_display }}
+                                                </span>
+                                            {% endif %}
+                                            
+                                            <p class="small text-muted mb-0 mt-2">
+                                                <i class="bi bi-clock"></i> Bloqueado hace {{ blocked.blocked_at|timesince }}
+                                            </p>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="col-auto">
+                                            <button class="btn btn-success btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#unblockUserModal"
+                                                    data-username="{{ blocked.blocked.username }}"
+                                                    data-fullname="{{ blocked.blocked.get_full_name }}">
+                                                <i class="bi bi-check-circle"></i> Desbloquear
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-shield-check"></i>
+                            <h5>No has bloqueado a nadie</h5>
+                            <p>Los usuarios que bloquees aparecerÃ¡n aquÃ­</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Desbloquear Usuario -->
+<div class="modal fade" id="unblockUserModal" tabindex="-1" aria-labelledby="unblockUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="unblockUserModalLabel">
+                    <i class="bi bi-check-circle me-2"></i>Desbloquear Usuario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="unblockUserForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-center mb-0">
+                        Â¿Deseas desbloquear a <strong id="unblockFullName"></strong>?
+                    </p>
+                    <p class="text-center text-muted small mt-2">
+                        DespuÃ©s de desbloquear, esta persona podrÃ¡ volver a interactuar contigo.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i>Desbloquear
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Unblock User Modal
+    const unblockModal = document.getElementById('unblockUserModal');
+    if (unblockModal) {
+        unblockModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const username = button.getAttribute('data-username');
+            const fullName = button.getAttribute('data-fullname');
+            
+            document.getElementById('unblockFullName').textContent = fullName;
+            document.getElementById('unblockUserForm').action = `/friends/unblock/${username}/`;
+        });
+    }
+});
+
+// Auto-close modals on success
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            const modals = document.querySelectorAll('.modal.show');
+            modals.forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            });
+        {% endif %}
+    {% endfor %}
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,412 @@
+﻿{% extends 'components/base_authenticated.html' %}
+{% load static %}
+{% load friends_tags %}
+
+{% block title %}Mis Amigos - UnicoNet{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Friend Card Styles */
+    .friend-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .friend-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .friend-avatar {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    
+    .friend-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .friend-avatar-placeholder i {
+        font-size: 2.5rem;
+        color: #adb5bd;
+    }
+    
+    /* Sidebar Navigation */
+    .sidebar-nav .list-group-item {
+        border: none;
+        border-left: 3px solid transparent;
+        background: transparent;
+        transition: all 0.3s;
+    }
+    
+    .sidebar-nav .list-group-item:hover {
+        background-color: #f8f9fa;
+        border-left-color: #cbd5e1;
+    }
+    
+    .sidebar-nav .list-group-item.active {
+        background-color: #f8f9fa;
+        border-left-color: #1e40af;
+        font-weight: 600;
+    }
+    
+    .sidebar-nav .list-group-item a {
+        color: #495057;
+        text-decoration: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .sidebar-nav .list-group-item.active a {
+        color: #1e40af;
+    }
+    
+    /* Search Box */
+    .search-box {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        transition: border-color 0.3s;
+    }
+    
+    .search-box:focus {
+        border-color: #1e40af;
+        box-shadow: 0 0 0 0.2rem rgba(30, 64, 175, 0.15);
+    }
+    
+    /* Cards */
+    .card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: white;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: #1e40af;
+        border-color: #1e40af;
+    }
+    
+    .btn-primary:hover {
+        background: #1e3a8a;
+        border-color: #1e3a8a;
+    }
+    
+    .btn-outline-primary {
+        color: #1e40af;
+        border-color: #1e40af;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #1e40af;
+        border-color: #1e40af;
+        color: white;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h5 {
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        color: #94a3b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-people-fill text-primary"></i> Amigos
+                    </h5>
+                    <ul class="list-group list-group-flush sidebar-nav">
+                        <li class="list-group-item active">
+                            <a href="{% url 'friends:friends_list' %}">
+                                <span><i class="bi bi-people"></i> Mis Amigos</span>
+                                <span class="badge bg-primary rounded-pill">{{ friends_count }}</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friend_requests' %}">
+                                <span><i class="bi bi-person-plus"></i> Solicitudes</span>
+                                {% if pending_friend_requests_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">
+                                        {{ pending_friend_requests_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friend_suggestions' %}">
+                                <span><i class="bi bi-stars"></i> Sugerencias</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:find_friends' %}">
+                                <span><i class="bi bi-search"></i> Buscar Amigos</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:blocked_users' %}">
+                                <span class="text-danger"><i class="bi bi-ban"></i> Bloqueados</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h4 class="mb-0">
+                        <i class="bi bi-people-fill text-primary"></i>
+                        Mis Amigos <span class="text-muted">({{ friends_count }})</span>
+                    </h4>
+                    <a href="{% url 'friends:find_friends' %}" class="btn btn-primary">
+                        <i class="bi bi-person-plus-fill"></i> Buscar Amigos
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Search Bar -->
+                    <form method="get" class="mb-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" 
+                                   name="q" 
+                                   class="form-control search-box border-start-0" 
+                                   placeholder="Buscar en mis amigos..." 
+                                   value="{{ query }}"
+                                   style="border-left: none;">
+                            {% if query %}
+                                <a href="{% url 'friends:friends_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+
+                    <!-- Friends Grid -->
+                    {% if friends %}
+                        <div class="row g-3">
+                            {% for friend in friends %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card friend-card h-100">
+                                        <div class="card-body text-center">
+                                            <!-- Avatar -->
+                                            {% if friend.profile.profile_image %}
+                                                <img src="{{ friend.profile.profile_image.url }}" 
+                                                     alt="{{ friend.get_full_name }}" 
+                                                     class="friend-avatar mb-3">
+                                            {% else %}
+                                                <div class="friend-avatar-placeholder mb-3 mx-auto">
+                                                    <i class="bi bi-person-fill"></i>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <!-- Name & Username -->
+                                            <h6 class="mb-1 fw-bold">{{ friend.get_full_name }}</h6>
+                                            <p class="text-muted small mb-2">@{{ friend.username }}</p>
+                                            
+                                            <!-- Info -->
+                                            {% if friend.career %}
+                                                <p class="small text-muted mb-2">
+                                                    <i class="bi bi-mortarboard"></i> {{ friend.get_career_display }}
+                                                </p>
+                                            {% endif %}
+                                            
+                                            <!-- Actions -->
+                                            <div class="d-grid gap-2">
+                                                <a href="{% url 'profiles:profile' friend.username %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> Ver Perfil
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-danger" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#removeFriendModal"
+                                                        data-username="{{ friend.username }}"
+                                                        data-fullname="{{ friend.get_full_name }}">
+                                                    <i class="bi bi-person-dash"></i> Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if friends.has_other_pages %}
+                            <nav aria-label="Paginación" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if friends.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ friends.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                                                <i class="bi bi-chevron-left"></i> Anterior
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in friends.paginator.page_range %}
+                                        {% if friends.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > friends.number|add:'-3' and num < friends.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">
+                                                    {{ num }}
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if friends.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ friends.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                                                Siguiente <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-people"></i>
+                            <h5>No tienes amigos todavía</h5>
+                            <p>Comienza a buscar personas para conectar</p>
+                            <a href="{% url 'friends:find_friends' %}" class="btn btn-primary mt-3">
+                                <i class="bi bi-search"></i> Buscar Amigos
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Eliminar Amigo -->
+<div class="modal fade" id="removeFriendModal" tabindex="-1" aria-labelledby="removeFriendModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="removeFriendModalLabel">
+                    <i class="bi bi-person-dash me-2"></i>Eliminar Amigo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="removeFriendForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-center mb-0">
+                        ¿Estás seguro de que deseas eliminar a <strong id="friendFullName"></strong> de tus amigos?
+                    </p>
+                    <p class="text-center text-muted small mt-2">
+                        Esta acción no se puede deshacer. Podrás volver a enviar una solicitud más tarde.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-person-dash me-1"></i>Eliminar Amigo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Handle Remove Friend Modal
+document.addEventListener('DOMContentLoaded', function() {
+    const removeFriendModal = document.getElementById('removeFriendModal');
+    if (removeFriendModal) {
+        removeFriendModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const username = button.getAttribute('data-username');
+            const fullName = button.getAttribute('data-fullname');
+            
+            // Update modal content
+            document.getElementById('friendFullName').textContent = fullName;
+            
+            // Update form action
+            const form = document.getElementById('removeFriendForm');
+            form.action = `/friends/remove/${username}/`;
+        });
+    }
+});
+
+// Auto-close modal on success
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            const modals = document.querySelectorAll('.modal.show');
+            modals.forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            });
+        {% endif %}
+    {% endfor %}
+{% endif %}
+</script>
+{% endblock %}

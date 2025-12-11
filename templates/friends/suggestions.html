@@ -1,0 +1,391 @@
+﻿{% extends 'components/base_authenticated.html' %}
+{% load static %}
+
+{% block title %}Sugerencias de Amistad - UnicoNet{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Suggestion Card Styles */
+    .suggestion-card {
+        transition: all 0.2s;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .suggestion-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .suggestion-avatar {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    
+    .suggestion-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .suggestion-avatar-placeholder i {
+        font-size: 2.5rem;
+        color: #adb5bd;
+    }
+    
+    /* Reason Badge */
+    .reason-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    /* Sidebar Navigation */
+    .sidebar-nav .list-group-item {
+        border: none;
+        border-left: 3px solid transparent;
+        background: transparent;
+        transition: all 0.3s;
+    }
+    
+    .sidebar-nav .list-group-item:hover {
+        background-color: #f8f9fa;
+        border-left-color: #cbd5e1;
+    }
+    
+    .sidebar-nav .list-group-item.active {
+        background-color: #f8f9fa;
+        border-left-color: #1e40af;
+        font-weight: 600;
+    }
+    
+    .sidebar-nav .list-group-item a {
+        color: #495057;
+        text-decoration: none;
+        display: flex;
+        justify-content-between;
+        align-items: center;
+    }
+    
+    .sidebar-nav .list-group-item.active a {
+        color: #1e40af;
+    }
+    
+    /* Cards */
+    .card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: white;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: #1e40af;
+        border-color: #1e40af;
+    }
+    
+    .btn-primary:hover {
+        background: #1e3a8a;
+        border-color: #1e3a8a;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h5 {
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        color: #94a3b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-people-fill text-primary"></i> Amigos
+                    </h5>
+                    <ul class="list-group list-group-flush sidebar-nav">
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friends_list' %}">
+                                <span><i class="bi bi-people"></i> Mis Amigos</span>
+                                <span class="badge bg-primary rounded-pill">{{ user.profile.friends_count }}</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:friend_requests' %}">
+                                <span><i class="bi bi-person-plus"></i> Solicitudes</span>
+                                {% if pending_friend_requests_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">
+                                        {{ pending_friend_requests_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="list-group-item active">
+                            <a href="{% url 'friends:friend_suggestions' %}">
+                                <span><i class="bi bi-stars"></i> Sugerencias</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:find_friends' %}">
+                                <span><i class="bi bi-search"></i> Buscar Amigos</span>
+                            </a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="{% url 'friends:blocked_users' %}">
+                                <span class="text-danger"><i class="bi bi-ban"></i> Bloqueados</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h4 class="mb-0">
+                        <i class="bi bi-stars text-primary"></i>
+                        Sugerencias de Amistad
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    {% if suggestions %}
+                        <p class="text-muted mb-4">
+                            <i class="bi bi-lightbulb"></i> 
+                            Personas que podrÃ­an interesarte
+                        </p>
+                        
+                        <div class="row g-3">
+                            {% for suggestion in suggestions %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card suggestion-card">
+                                        <div class="card-body text-center">
+                                            <!-- Avatar -->
+                                            {% if suggestion.suggested_user.profile.profile_image %}
+                                                <img src="{{ suggestion.suggested_user.profile.profile_image.url }}" 
+                                                     alt="{{ suggestion.suggested_user.get_full_name }}" 
+                                                     class="suggestion-avatar mb-3">
+                                            {% else %}
+                                                <div class="suggestion-avatar-placeholder mb-3 mx-auto">
+                                                    <i class="bi bi-person-fill"></i>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <!-- Name & Username -->
+                                            <h6 class="mb-1 fw-bold">{{ suggestion.suggested_user.get_full_name }}</h6>
+                                            <p class="text-muted small mb-2">@{{ suggestion.suggested_user.username }}</p>
+                                            
+                                            <!-- Reason -->
+                                            <span class="reason-badge mb-3">
+                                                {% if suggestion.reason == 'mutual_friends' %}
+                                                    <i class="bi bi-people"></i> Amigos en comÃºn
+                                                {% elif suggestion.reason == 'same_career' %}
+                                                    <i class="bi bi-mortarboard"></i> Misma carrera
+                                                {% elif suggestion.reason == 'same_semester' %}
+                                                    <i class="bi bi-bookmark"></i> Mismo semestre
+                                                {% elif suggestion.reason == 'common_interests' %}
+                                                    <i class="bi bi-heart"></i> Intereses comunes
+                                                {% elif suggestion.reason == 'common_groups' %}
+                                                    <i class="bi bi-collection"></i> Grupos en comÃºn
+                                                {% elif suggestion.reason == 'profile_view' %}
+                                                    <i class="bi bi-eye"></i> VisitÃ³ tu perfil
+                                                {% else %}
+                                                    <i class="bi bi-star"></i> Sugerencia
+                                                {% endif %}
+                                            </span>
+                                            
+                                            <!-- Info -->
+                                            {% if suggestion.suggested_user.career %}
+                                                <p class="small text-muted mb-2 mt-2">
+                                                    <i class="bi bi-mortarboard"></i> {{ suggestion.suggested_user.get_career_display }}
+                                                </p>
+                                            {% endif %}
+                                            
+                                            <!-- Actions -->
+                                            <div class="d-grid gap-2 mt-3">
+                                                <button class="btn btn-sm btn-primary" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#sendRequestModal"
+                                                        data-username="{{ suggestion.suggested_user.username }}"
+                                                        data-fullname="{{ suggestion.suggested_user.get_full_name }}"
+                                                        data-suggestion-id="{{ suggestion.id }}">
+                                                    <i class="bi bi-person-plus-fill"></i> Agregar
+                                                </button>
+                                                
+                                                <a href="{% url 'profiles:profile' suggestion.suggested_user.username %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> Ver Perfil
+                                                </a>
+                                                
+                                                <button class="btn btn-sm btn-outline-secondary" 
+                                                        onclick="dismissSuggestion({{ suggestion.id }})">
+                                                    <i class="bi bi-x-lg"></i> Descartar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-stars"></i>
+                            <h5>No hay sugerencias disponibles</h5>
+                            <p>Busca personas manualmente para conectar</p>
+                            <a href="{% url 'friends:find_friends' %}" class="btn btn-primary mt-3">
+                                <i class="bi bi-search"></i> Buscar Amigos
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Enviar Solicitud -->
+<div class="modal fade" id="sendRequestModal" tabindex="-1" aria-labelledby="sendRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="sendRequestModalLabel">
+                    <i class="bi bi-person-plus me-2"></i>Enviar Solicitud de Amistad
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="sendRequestForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="from_suggestions" value="true">
+                <input type="hidden" id="suggestionIdInput" name="suggestion_id" value="">
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-person-plus-fill text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-center mb-3">
+                        Enviar solicitud de amistad a <strong id="sendRequestFullName"></strong>
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mensaje (opcional)</label>
+                        <textarea name="message" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  maxlength="200" 
+                                  placeholder="Escribe un mensaje de presentaciÃ³n..."></textarea>
+                        <small class="text-muted">MÃ¡ximo 200 caracteres</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>Enviar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Form oculto para descartar sugerencias -->
+<form id="dismissSuggestionForm" method="post" style="display: none;">
+    {% csrf_token %}
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Send Request Modal
+    const sendRequestModal = document.getElementById('sendRequestModal');
+    if (sendRequestModal) {
+        sendRequestModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const username = button.getAttribute('data-username');
+            const fullName = button.getAttribute('data-fullname');
+            const suggestionId = button.getAttribute('data-suggestion-id');
+            
+            document.getElementById('sendRequestFullName').textContent = fullName;
+            document.getElementById('sendRequestForm').action = `/friends/send/${username}/`;
+            document.getElementById('suggestionIdInput').value = suggestionId;
+        });
+    }
+});
+
+// Dismiss Suggestion
+function dismissSuggestion(suggestionId) {
+    if (confirm('Â¿Descartar esta sugerencia?')) {
+        const form = document.getElementById('dismissSuggestionForm');
+        form.action = `/friends/suggestions/dismiss/${suggestionId}/`;
+        form.submit();
+    }
+}
+
+// Auto-close modals on success
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            const modals = document.querySelectorAll('.modal.show');
+            modals.forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            });
+        {% endif %}
+    {% endfor %}
+{% endif %}
+</script>
+{% endblock %}
