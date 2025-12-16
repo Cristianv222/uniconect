@@ -34,14 +34,153 @@
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
+    
+    /* ========================================
+       SELECTOR DE REACCIONES
+       ======================================== */
+    .reaction-container {
+        position: relative;
+    }
+    
+    .reactions-selector {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        border-radius: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        display: none;
+        gap: 4px;
+        z-index: 1000;
+        animation: scaleIn 0.2s ease-out;
+    }
+    
+    .reactions-selector.show {
+        display: flex !important;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+    }
+    
+    .reactions-selector::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 8px solid white;
+    }
+    
+    .reaction-option {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+    
+    .reaction-option .emoji {
+        font-size: 1.8rem;
+        transition: transform 0.2s;
+        display: block;
+    }
+    
+    .reaction-option .label {
+        position: absolute;
+        bottom: -25px;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+    
+    .reaction-option:hover {
+        background: #f0f2f5;
+        transform: scale(1.3);
+    }
+    
+    .reaction-option:hover .emoji {
+        animation: bounce 0.5s ease;
+    }
+    
+    .reaction-option:hover .label {
+        opacity: 1;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .reaction-button {
+        position: relative;
+    }
+    
+    .reaction-button .reaction-icon {
+        font-size: 1.2rem;
+        margin-right: 4px;
+    }
+    
+    .reaction-button.text-primary .reaction-text {
+        font-weight: 600;
+    }
+    
+    @keyframes floatHeart {
+        0% { transform: translateY(0) scale(1); opacity: 1; }
+        100% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+    }
+    
+    .hover-bg:hover { 
+        background-color: #f0f2f5; 
+        cursor: pointer; 
+    }
+    
+    .reaction-emoji {
+        font-size: 1rem;
+        margin-right: 2px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .reaction-option .emoji {
+            font-size: 1.5rem;
+        }
+        .reaction-option {
+            padding: 6px;
+        }
+        .reactions-selector {
+            padding: 6px 8px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <!-- Columna central del feed -->
-        <div class="col-lg-8 mx-auto">
 <div class="container-fluid">
     <div class="row">
         <!-- Columna central del feed -->
@@ -229,18 +368,441 @@
 
 {% block extra_js %}
 <script src="{% static 'js/posts.js' %}"></script>
-<script>
-    console.log('Feed cargado para {{ user.first_name }}');
-    
-    // Auto-focus en modal de crear post
-    document.getElementById('modalCreatePost')?.addEventListener('shown.bs.modal', function () {
-        this.querySelector('textarea[name="content"]')?.focus();
-    });
 
-    // Función para cargar más posts (placeholder)
-    function loadMorePosts() {
-        console.log('Cargando más posts...');
-        // TODO: Implementar carga con AJAX
+<!-- SISTEMA DE REACCIONES MÚLTIPLES -->
+<script>
+console.log('Feed cargado para {{ user.first_name }}');
+
+// ============================================
+// MAPEO DE REACCIONES
+// ============================================
+const REACTIONS = {
+    like: { emoji: '👍', text: 'Me gusta', color: 'primary' },
+    love: { emoji: '❤️', text: 'Me encanta', color: 'danger' },
+    haha: { emoji: '😂', text: 'Me divierte', color: 'warning' },
+    wow: { emoji: '😮', text: 'Me asombra', color: 'info' },
+    sad: { emoji: '😢', text: 'Me entristece', color: 'secondary' },
+    angry: { emoji: '😠', text: 'Me enoja', color: 'danger' }
+};
+
+// ============================================
+// MANEJO DEL SELECTOR DE REACCIONES
+// ============================================
+let reactionTimeout = null;
+let currentOpenSelector = null;
+
+// Mostrar selector al hacer hover
+document.addEventListener('mouseover', function(e) {
+    const container = e.target.closest('.reaction-container');
+    if (container && !container.classList.contains('selector-open')) {
+        clearTimeout(reactionTimeout);
+        
+        // Cerrar cualquier selector abierto
+        if (currentOpenSelector && currentOpenSelector !== container) {
+            const oldSelector = currentOpenSelector.querySelector('.reactions-selector');
+            if (oldSelector) oldSelector.classList.remove('show');
+        }
+        
+        reactionTimeout = setTimeout(() => {
+            const selector = container.querySelector('.reactions-selector');
+            if (selector) {
+                selector.classList.add('show');
+                container.classList.add('selector-open');
+                currentOpenSelector = container;
+            }
+        }, 500); // Medio segundo de hover
     }
+});
+
+// Ocultar selector al salir
+document.addEventListener('mouseout', function(e) {
+    const container = e.target.closest('.reaction-container');
+    if (container) {
+        clearTimeout(reactionTimeout);
+        
+        // Verificar si realmente salimos del contenedor
+        const relatedTarget = e.relatedTarget;
+        if (!relatedTarget || !container.contains(relatedTarget)) {
+            setTimeout(() => {
+                const selector = container.querySelector('.reactions-selector');
+                if (selector && !selector.matches(':hover')) {
+                    selector.classList.remove('show');
+                    container.classList.remove('selector-open');
+                    if (currentOpenSelector === container) {
+                        currentOpenSelector = null;
+                    }
+                }
+            }, 200);
+        }
+    }
+});
+
+// ============================================
+// CLICK EN REACCIÓN
+// ============================================
+document.addEventListener('click', function(e) {
+    // Click en una opción de reacción
+    const reactionOption = e.target.closest('.reaction-option');
+    if (reactionOption) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const reactionType = reactionOption.dataset.reaction;
+        const postId = reactionOption.dataset.postId;
+        
+        console.log('Reacción seleccionada:', reactionType, 'para post:', postId);
+        
+        // Ocultar selector
+        const selector = reactionOption.closest('.reactions-selector');
+        if (selector) {
+            selector.classList.remove('show');
+            const container = selector.closest('.reaction-container');
+            if (container) {
+                container.classList.remove('selector-open');
+            }
+        }
+        
+        // Enviar reacción
+        sendReaction(postId, reactionType);
+        return;
+    }
+    
+    // Click rápido en el botón de reacción (sin abrir selector)
+    const quickReactButton = e.target.closest('[data-action="quick-react"]');
+    if (quickReactButton) {
+        e.preventDefault();
+        const postId = quickReactButton.dataset.postId;
+        const currentReaction = quickReactButton.dataset.currentReaction;
+        
+        console.log('Click rápido en reacción. Post:', postId, 'Reacción actual:', currentReaction);
+        
+        // Si ya tiene reacción, quitarla. Si no, poner "like"
+        const reactionType = currentReaction ? currentReaction : 'like';
+        sendReaction(postId, reactionType);
+        return;
+    }
+    
+    // Ver lista de reacciones
+    const viewLikesButton = e.target.closest('[data-action="view-likes"]');
+    if (viewLikesButton) {
+        e.preventDefault();
+        const postId = viewLikesButton.dataset.postId;
+        showLikesModal(postId);
+        return;
+    }
+});
+
+// ============================================
+// ENVIAR REACCIÓN AL SERVIDOR
+// ============================================
+function sendReaction(postId, reactionType) {
+    const button = document.querySelector(`[data-action="quick-react"][data-post-id="${postId}"]`);
+    if (!button) {
+        console.error('Botón de reacción no encontrado');
+        return;
+    }
+    
+    // Prevenir clicks múltiples
+    if (button.disabled) return;
+    button.disabled = true;
+    
+    fetch(`/likes/toggle/${postId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ reaction_type: reactionType })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Respuesta del servidor:', data);
+        
+        if (data.success) {
+            updateReactionButton(button, data);
+            updateReactionsCount(postId, data.reactions_count, data.reactions_summary);
+            
+            // Animación
+            if (data.reacted) {
+                animateReaction(button, data.reaction_emoji);
+            }
+            
+            showToast(data.message, 'success');
+        } else {
+            showToast(data.error || 'Error al procesar la reacción', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'danger');
+    })
+    .finally(() => {
+        button.disabled = false;
+    });
+}
+
+// ============================================
+// ACTUALIZAR UI DEL BOTÓN DE REACCIÓN
+// ============================================
+function updateReactionButton(button, data) {
+    const reactionIcon = button.querySelector('.reaction-icon');
+    const reactionText = button.querySelector('.reaction-text');
+    const iconElement = button.querySelector('i');
+    
+    if (data.reacted && data.reaction_type) {
+        // Usuario reaccionó
+        const reaction = REACTIONS[data.reaction_type];
+        
+        button.classList.add('text-primary');
+        button.classList.remove('text-muted');
+        button.dataset.currentReaction = data.reaction_type;
+        
+        // Actualizar emoji e icono
+        if (reactionIcon) {
+            reactionIcon.textContent = reaction.emoji;
+        } else if (iconElement) {
+            // Reemplazar icono con emoji
+            const span = document.createElement('span');
+            span.className = 'reaction-icon';
+            span.textContent = reaction.emoji;
+            iconElement.replaceWith(span);
+        }
+        
+        if (reactionText) {
+            reactionText.textContent = reaction.text;
+        }
+    } else {
+        // Usuario quitó la reacción
+        button.classList.remove('text-primary');
+        button.classList.add('text-muted');
+        button.dataset.currentReaction = '';
+        
+        // Volver al estado inicial
+        if (reactionIcon) {
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-heart';
+            reactionIcon.replaceWith(icon);
+        }
+        
+        if (reactionText) {
+            reactionText.textContent = 'Me gusta';
+        }
+    }
+}
+
+// ============================================
+// ACTUALIZAR CONTADOR DE REACCIONES
+// ============================================
+function updateReactionsCount(postId, count, summary) {
+    const postCard = document.querySelector(`[data-post-id="${postId}"]`);
+    if (!postCard) return;
+    
+    const likesInfo = postCard.querySelector('.likes-info');
+    const likesCount = postCard.querySelector('.likes-count');
+    const reactionsPreview = postCard.querySelector('.reactions-preview');
+    
+    // Actualizar contador
+    if (likesCount) {
+        likesCount.textContent = count;
+    }
+    
+    // Mostrar/ocultar sección
+    if (likesInfo) {
+        likesInfo.style.display = count > 0 ? 'flex' : 'none';
+    }
+    
+    // Actualizar preview de emojis
+    if (reactionsPreview && summary) {
+        reactionsPreview.innerHTML = '';
+        
+        // Ordenar reacciones por cantidad
+        const sortedReactions = Object.entries(summary)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3); // Máximo 3 emojis
+        
+        sortedReactions.forEach(([type, count]) => {
+            if (REACTIONS[type]) {
+                const emoji = document.createElement('span');
+                emoji.className = 'reaction-emoji';
+                emoji.textContent = REACTIONS[type].emoji;
+                reactionsPreview.appendChild(emoji);
+            }
+        });
+    }
+}
+
+// ============================================
+// ANIMACIÓN DE REACCIÓN
+// ============================================
+function animateReaction(button, emoji) {
+    // Animación del botón
+    button.style.transition = 'transform 0.2s ease';
+    button.style.transform = 'scale(1.1)';
+    setTimeout(() => {
+        button.style.transform = 'scale(1)';
+    }, 200);
+    
+    // Emoji flotante
+    createFloatingEmoji(button, emoji);
+}
+
+function createFloatingEmoji(button, emoji) {
+    const floatingEmoji = document.createElement('div');
+    floatingEmoji.textContent = emoji || '❤️';
+    floatingEmoji.style.cssText = `
+        position: fixed;
+        font-size: 2rem;
+        opacity: 1;
+        pointer-events: none;
+        z-index: 9999;
+        animation: floatHeart 1s ease-out forwards;
+    `;
+    
+    const rect = button.getBoundingClientRect();
+    floatingEmoji.style.left = `${rect.left + rect.width / 2 - 16}px`;
+    floatingEmoji.style.top = `${rect.top - 10}px`;
+    
+    document.body.appendChild(floatingEmoji);
+    setTimeout(() => floatingEmoji.remove(), 1000);
+}
+
+// ============================================
+// MODAL DE LIKES
+// ============================================
+function showLikesModal(postId) {
+    fetch(`/likes/post/${postId}/preview/`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showToast(data.error, 'danger');
+            return;
+        }
+        renderLikesModal(data, postId);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error al cargar reacciones', 'danger');
+    });
+}
+
+function renderLikesModal(data, postId) {
+    let modal = document.getElementById('likesModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'likesModal';
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-heart-fill text-danger"></i> Reacciones
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="likesModalBody"></div>
+                    <div class="modal-footer" id="likesModalFooter"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    const modalBody = document.getElementById('likesModalBody');
+    const modalFooter = document.getElementById('likesModalFooter');
+    
+    if (data.likers.length === 0) {
+        modalBody.innerHTML = `
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-heart" style="font-size: 3rem;"></i>
+                <p class="mt-3 mb-0">Sé el primero en reaccionar</p>
+            </div>
+        `;
+        modalFooter.innerHTML = '';
+    } else {
+        modalBody.innerHTML = data.likers.map(liker => {
+            const reactionEmoji = liker.reaction && REACTIONS[liker.reaction] 
+                ? REACTIONS[liker.reaction].emoji 
+                : '👍';
+            
+            return `
+                <div class="d-flex align-items-center mb-3 p-2 rounded hover-bg">
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(liker.user.full_name)}&background=0d47a1&color=fff" 
+                         class="rounded-circle me-3" width="40" height="40" alt="${liker.user.full_name}">
+                    <div class="flex-grow-1">
+                        <a href="${liker.user.profile_url}" class="text-decoration-none text-dark">
+                            <strong>${liker.user.full_name}</strong>
+                        </a>
+                        <div class="small text-muted">@${liker.user.username}</div>
+                    </div>
+                    <span style="font-size: 1.5rem;">${reactionEmoji}</span>
+                </div>
+            `;
+        }).join('');
+        
+        modalFooter.innerHTML = data.has_more ? 
+            `<a href="/likes/post/${postId}/" class="btn btn-primary">Ver todos (${data.total_count})</a>` : '';
+    }
+    
+    new bootstrap.Modal(modal).show();
+}
+
+// ============================================
+// FUNCIONES AUXILIARES
+// ============================================
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showToast(message, type = 'info') {
+    const toastHTML = `
+        <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = '11';
+        document.body.appendChild(toastContainer);
+    }
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    const toastElement = toastContainer.lastElementChild;
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+}
+
+// Auto-focus en modal de crear post
+document.getElementById('modalCreatePost')?.addEventListener('shown.bs.modal', function () {
+    this.querySelector('textarea[name="content"]')?.focus();
+});
+
+// Función para cargar más posts
+function loadMorePosts() {
+    console.log('Cargando más posts...');
+    showToast('Funcionalidad en desarrollo', 'info');
+}
+
+console.log('✅ Sistema de reacciones múltiples cargado correctamente');
 </script>
 {% endblock %}

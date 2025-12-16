@@ -1,4 +1,5 @@
 {% load static %}
+{% load likes_tags %}
 
 <div class="card mb-3 post-card" data-post-id="{{ post.id }}">
     <div class="card-body">
@@ -6,7 +7,7 @@
         <div class="d-flex align-items-center mb-3">
             <a href="{% url 'profiles:profile' post.author.username %}">
                 {% if post.author.profile.avatar %}
-                    <img src="{{ post.author.profile.avatar.url }}" class="rounded-circle me-2" width="40" height="40" alt="{{ post.author.get_full_name }}">
+                    <img src="{{ post.author.profile.avatar.url }}" class="rounded-circle me-2" width="40" height="40" alt="{{ post.author.get_full_name }}" style="object-fit: cover;">
                 {% else %}
                     <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
                         {{ post.author.first_name.0 }}{{ post.author.last_name.0 }}
@@ -129,7 +130,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
                     {% if post.shared_post.author.profile.avatar %}
-                        <img src="{{ post.shared_post.author.profile.avatar.url }}" class="rounded-circle me-2" width="32" height="32" alt="{{ post.shared_post.author.get_full_name }}">
+                        <img src="{{ post.shared_post.author.profile.avatar.url }}" class="rounded-circle me-2" width="32" height="32" alt="{{ post.shared_post.author.get_full_name }}" style="object-fit: cover;">
                     {% else %}
                         <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
                             {{ post.shared_post.author.first_name.0 }}
@@ -144,7 +145,7 @@
                     <p class="mb-2">{{ post.shared_post.content|truncatewords:30 }}</p>
                 {% endif %}
                 {% if post.shared_post.images.first %}
-                    <img src="{{ post.shared_post.images.first.image.url }}" class="img-fluid rounded" style="max-height: 200px;" alt="Imagen">
+                    <img src="{{ post.shared_post.images.first.image.url }}" class="img-fluid rounded" style="max-height: 200px; object-fit: cover;" alt="Imagen">
                 {% endif %}
             </div>
         </div>
@@ -154,25 +155,25 @@
         {% if post.images.all %}
         <div class="post-images mb-3">
             {% if post.images.count == 1 %}
-                <img src="{{ post.images.first.image.url }}" class="img-fluid rounded w-100" style="max-height: 500px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ post.images.first.image.url }}')">
+                <img src="{{ post.images.first.image.url }}" class="img-fluid rounded w-100" style="max-height: 500px; object-fit: cover; cursor: pointer;" alt="Imagen" onclick="openImageModal('{{ post.images.first.image.url }}')">
             {% elif post.images.count == 2 %}
                 <div class="row g-2">
                     {% for image in post.images.all %}
                     <div class="col-6">
-                        <img src="{{ image.image.url }}" class="img-fluid rounded w-100" style="height: 250px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ image.image.url }}')">
+                        <img src="{{ image.image.url }}" class="img-fluid rounded w-100" style="height: 250px; object-fit: cover; cursor: pointer;" alt="Imagen" onclick="openImageModal('{{ image.image.url }}')">
                     </div>
                     {% endfor %}
                 </div>
             {% elif post.images.count == 3 %}
                 <div class="row g-2">
                     <div class="col-12">
-                        <img src="{{ post.images.0.image.url }}" class="img-fluid rounded w-100" style="height: 300px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ post.images.0.image.url }}')">
+                        <img src="{{ post.images.0.image.url }}" class="img-fluid rounded w-100" style="height: 300px; object-fit: cover; cursor: pointer;" alt="Imagen" onclick="openImageModal('{{ post.images.0.image.url }}')">
                     </div>
                     <div class="col-6">
-                        <img src="{{ post.images.1.image.url }}" class="img-fluid rounded w-100" style="height: 200px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ post.images.1.image.url }}')">
+                        <img src="{{ post.images.1.image.url }}" class="img-fluid rounded w-100" style="height: 200px; object-fit: cover; cursor: pointer;" alt="Imagen" onclick="openImageModal('{{ post.images.1.image.url }}')">
                     </div>
                     <div class="col-6">
-                        <img src="{{ post.images.2.image.url }}" class="img-fluid rounded w-100" style="height: 200px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ post.images.2.image.url }}')">
+                        <img src="{{ post.images.2.image.url }}" class="img-fluid rounded w-100" style="height: 200px; object-fit: cover; cursor: pointer;" alt="Imagen" onclick="openImageModal('{{ post.images.2.image.url }}')">
                     </div>
                 </div>
             {% else %}
@@ -180,9 +181,9 @@
                     {% for image in post.images.all|slice:":4" %}
                     <div class="col-6">
                         <div class="position-relative">
-                            <img src="{{ image.image.url }}" class="img-fluid rounded w-100" style="height: 200px; object-fit: cover;" alt="Imagen" onclick="openImageModal('{{ image.image.url }}')">
+                            <img src="{{ image.image.url }}" class="img-fluid rounded w-100" style="height: 200px; object-fit: cover; cursor: pointer;" alt="Imagen" onclick="openImageModal('{{ image.image.url }}')">
                             {% if forloop.counter == 4 and post.images.count > 4 %}
-                                <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 rounded d-flex align-items-center justify-content-center text-white">
+                                <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 rounded d-flex align-items-center justify-content-center text-white" style="cursor: pointer;">
                                     <h3>+{{ post.images.count|add:"-4" }}</h3>
                                 </div>
                             {% endif %}
@@ -208,11 +209,21 @@
 
         <!-- Estadísticas -->
         <div class="d-flex justify-content-between align-items-center mb-2 pt-2 border-top">
-            <small class="text-muted">
-                {% if post.likes_count > 0 %}
-                    <i class="bi bi-heart-fill text-danger"></i> {{ post.likes_count }} me gusta
-                {% endif %}
-            </small>
+            <div class="likes-info" style="{% if post.likes_count == 0 %}display: none;{% else %}display: flex;{% endif %} align-items: center; gap: 4px;">
+                <button class="btn btn-link text-decoration-none p-0" 
+                        data-action="view-likes" 
+                        data-post-id="{{ post.id }}"
+                        style="background: none; border: none; cursor: pointer;"
+                        title="Ver quién reaccionó">
+                    <small class="text-muted d-flex align-items-center gap-1">
+                        <span class="reactions-preview">
+                            <!-- Los emojis se agregarán dinámicamente con JS -->
+                            <span class="reaction-emoji">❤️</span>
+                        </span>
+                        <span class="likes-count">{{ post.likes_count }}</span>
+                    </small>
+                </button>
+            </div>
             <small class="text-muted">
                 {% if post.comments_count > 0 %}
                     {{ post.comments_count }} comentario{{ post.comments_count|pluralize }}
@@ -224,14 +235,71 @@
         </div>
 
         <!-- Acciones -->
-        <div class="d-flex justify-content-around border-top pt-2">
-            <button class="btn btn-light flex-fill me-1" onclick="toggleLike({{ post.id }})">
-                <i class="bi bi-heart"></i> Me gusta
-            </button>
-            <a href="{% url 'posts:post_detail' post.id %}" class="btn btn-light flex-fill mx-1">
+        <div class="d-flex justify-content-around border-top pt-2 post-actions">
+            <!-- Botón de reacción con selector -->
+            <div class="position-relative flex-fill me-1 reaction-container">
+                <button class="btn btn-light w-100 reaction-button
+                               {% if post|user_reaction:user %}text-primary{% else %}text-muted{% endif %}" 
+                        data-action="quick-react" 
+                        data-post-id="{{ post.id }}"
+                        data-current-reaction="{{ post|user_reaction:user|default:'' }}"
+                        type="button"
+                        aria-label="Reaccionar">
+                    {% with reaction=post|user_reaction:user %}
+                        {% if reaction == 'like' %}
+                            <span class="reaction-icon">👍</span> <span class="reaction-text">Me gusta</span>
+                        {% elif reaction == 'love' %}
+                            <span class="reaction-icon">❤️</span> <span class="reaction-text">Me encanta</span>
+                        {% elif reaction == 'haha' %}
+                            <span class="reaction-icon">😂</span> <span class="reaction-text">Me divierte</span>
+                        {% elif reaction == 'wow' %}
+                            <span class="reaction-icon">😮</span> <span class="reaction-text">Me asombra</span>
+                        {% elif reaction == 'sad' %}
+                            <span class="reaction-icon">😢</span> <span class="reaction-text">Me entristece</span>
+                        {% elif reaction == 'angry' %}
+                            <span class="reaction-icon">😠</span> <span class="reaction-text">Me enoja</span>
+                        {% else %}
+                            <i class="bi bi-heart"></i> <span class="reaction-text">Me gusta</span>
+                        {% endif %}
+                    {% endwith %}
+                </button>
+                
+                <!-- Selector de reacciones (aparece al hacer hover) -->
+                <div class="reactions-selector" data-post-id="{{ post.id }}">
+                    <button type="button" class="reaction-option" data-reaction="like" data-post-id="{{ post.id }}" title="Me gusta">
+                        <span class="emoji">👍</span>
+                        <span class="label">Me gusta</span>
+                    </button>
+                    <button type="button" class="reaction-option" data-reaction="love" data-post-id="{{ post.id }}" title="Me encanta">
+                        <span class="emoji">❤️</span>
+                        <span class="label">Me encanta</span>
+                    </button>
+                    <button type="button" class="reaction-option" data-reaction="haha" data-post-id="{{ post.id }}" title="Me divierte">
+                        <span class="emoji">😂</span>
+                        <span class="label">Me divierte</span>
+                    </button>
+                    <button type="button" class="reaction-option" data-reaction="wow" data-post-id="{{ post.id }}" title="Me asombra">
+                        <span class="emoji">😮</span>
+                        <span class="label">Me asombra</span>
+                    </button>
+                    <button type="button" class="reaction-option" data-reaction="sad" data-post-id="{{ post.id }}" title="Me entristece">
+                        <span class="emoji">😢</span>
+                        <span class="label">Me entristece</span>
+                    </button>
+                    <button type="button" class="reaction-option" data-reaction="angry" data-post-id="{{ post.id }}" title="Me enoja">
+                        <span class="emoji">😠</span>
+                        <span class="label">Me enoja</span>
+                    </button>
+                </div>
+            </div>
+            
+            <a href="{% url 'posts:post_detail' post.id %}" class="btn btn-light flex-fill mx-1 text-muted">
                 <i class="bi bi-chat"></i> Comentar
             </a>
-            <button class="btn btn-light flex-fill ms-1" data-bs-toggle="modal" data-bs-target="#modalSharePost" onclick="setSharePost({{ post.id }})">
+            <button class="btn btn-light flex-fill ms-1 text-muted" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalSharePost" 
+                    onclick="setSharePost({{ post.id }})">
                 <i class="bi bi-share"></i> Compartir
             </button>
         </div>

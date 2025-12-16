@@ -15,7 +15,7 @@
                 <div class="modal-body">
                     <div class="d-flex align-items-center mb-3">
                         {% if user.profile.avatar %}
-                            <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" width="40" height="40" alt="Avatar">
+                            <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" width="40" height="40" alt="Avatar" style="object-fit: cover;">
                         {% else %}
                             <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
                                 {{ user.first_name.0 }}
@@ -34,20 +34,20 @@
                         <label class="form-label">Privacidad</label>
                         <select name="privacy" class="form-select">
                             <option value="public">Público</option>
-                            <option value="friends">Amigos</option>
+                            <option value="friends" selected>Amigos</option>
                             <option value="private">Solo yo</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Imágenes</label>
-                        <input type="file" name="images" class="form-control" multiple accept="image/*">
+                        <input type="file" name="images" id="input-images" class="form-control" multiple accept="image/*">
                         <small class="text-muted">Puedes seleccionar múltiples imágenes</small>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Videos</label>
-                        <input type="file" name="videos" class="form-control" multiple accept="video/*">
+                        <input type="file" name="videos" id="input-videos" class="form-control" multiple accept="video/*">
                         <small class="text-muted">Puedes seleccionar múltiples videos</small>
                     </div>
 
@@ -148,7 +148,7 @@
                         <label class="form-label">Compartir con</label>
                         <select name="privacy" class="form-select">
                             <option value="public">Público</option>
-                            <option value="friends">Amigos</option>
+                            <option value="friends" selected>Amigos</option>
                             <option value="private">Solo yo</option>
                         </select>
                     </div>
@@ -186,11 +186,12 @@
                         <select name="reason" class="form-select" required>
                             <option value="">Selecciona un motivo</option>
                             <option value="spam">Spam</option>
-                            <option value="inappropriate">Contenido inapropiado</option>
                             <option value="harassment">Acoso</option>
-                            <option value="fake_news">Noticias falsas</option>
-                            <option value="violence">Violencia</option>
                             <option value="hate_speech">Discurso de odio</option>
+                            <option value="violence">Violencia</option>
+                            <option value="nudity">Desnudez o contenido sexual</option>
+                            <option value="false_info">Información falsa</option>
+                            <option value="self_harm">Autolesión o suicidio</option>
                             <option value="other">Otro</option>
                         </select>
                     </div>
@@ -237,8 +238,7 @@ function setDeletePost(postId) {
 function setSharePost(postId) {
     document.getElementById('share_post_id').value = postId;
     document.getElementById('formSharePost').action = `/posts/${postId}/share/`;
-    // Cargar preview del post
-    // TODO: Implementar carga AJAX del post
+    // TODO: Cargar preview del post via AJAX
 }
 
 function setReportPost(postId) {
@@ -255,6 +255,9 @@ function loadEditPost(postId) {
             document.getElementById('edit_content').value = data.content;
             document.getElementById('edit_privacy').value = data.privacy;
             document.getElementById('formEditPost').action = `/posts/${postId}/edit/`;
+        })
+        .catch(error => {
+            console.error('Error al cargar post:', error);
         });
 }
 
@@ -263,21 +266,55 @@ function openImageModal(imageUrl) {
     new bootstrap.Modal(document.getElementById('modalImageViewer')).show();
 }
 
-// Preview de archivos al seleccionar
-document.querySelector('input[name="images"]')?.addEventListener('change', function(e) {
+// Preview de imágenes al seleccionar
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('input-images');
+    const videoInput = document.getElementById('input-videos');
     const preview = document.getElementById('previewMedia');
-    preview.innerHTML = '';
     
-    Array.from(e.target.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.className = 'img-thumbnail me-2 mb-2';
-            img.style.maxHeight = '100px';
-            preview.appendChild(img);
-        }
-        reader.readAsDataURL(file);
-    });
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            // Limpiar preview anterior
+            preview.innerHTML = '';
+            
+            Array.from(e.target.files).forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'position-relative d-inline-block me-2 mb-2';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" class="img-thumbnail" style="max-height: 100px; max-width: 100px; object-fit: cover;">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" onclick="this.parentElement.remove()">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        `;
+                        preview.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    }
+    
+    if (videoInput) {
+        videoInput.addEventListener('change', function(e) {
+            Array.from(e.target.files).forEach((file, index) => {
+                if (file.type.startsWith('video/')) {
+                    const div = document.createElement('div');
+                    div.className = 'position-relative d-inline-block me-2 mb-2';
+                    div.innerHTML = `
+                        <video class="img-thumbnail" style="max-height: 100px; max-width: 100px;" controls>
+                            <source src="${URL.createObjectURL(file)}" type="${file.type}">
+                        </video>
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" onclick="this.parentElement.remove()">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    `;
+                    preview.appendChild(div);
+                }
+            });
+        });
+    }
 });
 </script>

@@ -21,7 +21,13 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-key-in-pr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '*.ngrok-free.app',  # Para ngrok versión nueva
+    '*.ngrok.io',         # Para ngrok versión antigua
+    'noir-scrappily-tod.ngrok-free.dev',  # Tu dominio específico actual
+]
 
 
 # ==============================================================================
@@ -279,6 +285,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost',
     'http://127.0.0.1',
+    'https://noir-scrappily-tod.ngrok-free.dev',  # Tu URL de ngrok
+    'https://*.ngrok-free.app',  # Comodín para cualquier subdominio
+    'https://*.ngrok.io', 
 ]
 
 # Configuración CSRF para desarrollo
